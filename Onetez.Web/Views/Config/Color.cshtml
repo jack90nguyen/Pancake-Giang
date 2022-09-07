@@ -1,0 +1,153 @@
+﻿@using Onetez.Dal.EntityClasses;
+@using Onetez.Web.Modules;
+@using Onetez.Dal.Models;
+@model ColorsEntity
+@{
+  ViewBag.SeoTitle = "Cấu hình màu";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  var shopList = (List<ShopsEntity>)ViewBag.ShopList;
+  var colorList = (List<ColorsEntity>)ViewBag.ColorList;
+  var tags = (List<StaticModel>)ViewBag.Tags;
+}
+@section Javascript{
+  <script>
+    function deleteItem(id) {
+      if (confirm(`Bạn có chắc muốn xóa từ khóa này ?`)) {
+        $.ajax({
+          type: "POST",
+          url: "/Config/ColorDelete",
+          data: { id },
+          dataType: "json",
+          success: function (res) {
+            if (res.status === true) {
+              $(`#row_${id}`).remove();
+            }
+            else {
+              showNotify(res.msg, false);
+            }
+          }
+        });
+      }
+    }
+  </script>
+}
+
+<style>
+  .control .radio {
+    margin-bottom: 5px;
+    margin-left: 0px;
+    margin-right: 5px;
+  }
+</style>
+
+<div class="columns is-centered">
+  <div class="column is-narrow" style="width: var(--form-medium);">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-header-title">
+          @ViewBag.SeoTitle
+        </span>
+      </div>
+      <div class="card-content">
+        <div class="columns">
+          <div class="column is-one-third">
+            <aside class="menu">
+              <div class="menu-label">
+                @TextData.Get("Hệ thống")
+              </div>
+              <ul class="menu-list">
+                <li>
+                  <a href="@Url.Action("Index","Config")">
+                    @TextData.Get("Cấu hình chung")
+                  </a>
+                </li>
+                <li>
+                  <a class="@(ViewBag.ColorType == "keyword" ? "is-active" : "")" href="@Url.Action("Color","Config", new { @type = "keyword"})">
+                    @TextData.Get("Màu từ khóa")
+                  </a>
+                </li>
+                <li>
+                  <a class="@(ViewBag.ColorType == "ship" ? "is-active" : "")" href="@Url.Action("Color", "Config", new { @type = "ship"})">
+                    @TextData.Get("Ngày gửi hàng")
+                  </a>
+                </li>
+              </ul>
+              <div class="menu-label">
+                Shop
+              </div>
+              <ul class="menu-list">
+                @foreach (var item in shopList)
+                {
+                  <li>
+                    <a href="@Url.Action("Shop","Config", new { @id = item.Id })">
+                      @item.Name
+                    </a>
+                  </li>
+                }
+                <li>
+                  <a href="@Url.Action("Shop","Config", new { @id = "0" })">
+                    @TextData.Get("Thêm mới")
+                  </a>
+                </li>
+              </ul>
+            </aside>
+          </div>
+
+          <div class="column is-two-thirds">
+            @using (Html.BeginForm())
+            {
+              @Html.Raw(ViewBag.Notification)
+
+              <div class="field is-grouped">
+                <div class="control is-expanded">
+                  @if (ViewBag.ColorType == "keyword")
+                  {
+                    @Html.TextBoxFor(model => model.Name, new { @class = "input", @placeholder = "Từ khoá...", @maxlength = "200" })
+                  }
+                  else if (ViewBag.ColorType == "ship")
+                  {
+                    @Html.TextBoxFor(model => model.Name, new { @class = "input", @placeholder = "Số ngày...", @type = "number" })
+                  }
+                </div>
+                <div class="control">
+                  <button type="submit" name="save" class="button is-link">Cập nhật</button>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="label">Màu sắc</label>
+                <div class="control">
+                  @foreach (var item in tags)
+                  {
+                    <label class="radio">
+                      @Html.RadioButtonFor(model => model.Color, item.color)
+                      <span class="tag @item.color">@item.name</span>
+                    </label>
+                  }
+                </div>
+              </div>
+            }
+
+            <hr />
+            <div class="title is-size-5" style="margin: 10px 0px;">
+              Danh sách màu
+            </div>
+            <div class="field is-grouped is-grouped-multiline">
+              @foreach (var item in colorList)
+              {
+                string link = Url.Action("Color", "Config", new { @type = item.Type, @colorId = item.Id });
+
+                <div id="row_@item.Id" class="control">
+                  <div class="tags has-addons">
+                    <a class="tag @item.Color" href="@link">@item.Name</a>
+                    <a class="tag is-delete" onclick="deleteItem(@item.Id)"></a>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

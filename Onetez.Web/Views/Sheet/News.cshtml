@@ -1,0 +1,303 @@
+﻿@using System.Configuration;
+@using Onetez.Core.DbContext;
+@using Onetez.Dal.EntityClasses;
+@using Onetez.Web.Modules;
+@{
+  ViewBag.SeoTitle = "Sheet: " + TextData.Get("Đơn chưa xử lý");
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  var IsPancake = Convert.ToBoolean(ConfigurationManager.AppSettings["IsPancake"]);
+  var IsReport = Convert.ToBoolean(ConfigurationManager.AppSettings["IsReport"]);
+  var IsSimple = Convert.ToBoolean(ConfigurationManager.AppSettings["IsSimple"]);
+  int tab = (int)ViewBag.TabId;
+  int shop = (int)ViewBag.ShopId;
+  var Config = (ConfigsEntity)ViewBag.ConfigInfo;
+  var listOrder = (List<SheetsEntity>)ViewBag.ListOrder;
+  var listProduct = DbProduct.GetListName(shop);
+  var listUser = DbUser.GetListStaff();
+}
+@section Javascript{
+  @Scripts.Render("~/bundles-sheet-list/js")
+}
+
+<div class="level">
+  <div class="level-left">
+    <div class="level-item">
+      <div>
+        <div class="title is-5 is-spaced is-uppercase">
+          @ViewBag.SeoTitle
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="level-left">
+    <div class="level-item">
+      <div class="buttons">
+        @if (IsSimple)
+        {
+          <a class="button is-small is-success" onclick="createMutiOrder(0)">
+            <span class="icon">
+              <i class="feather icon-play"></i>
+            </span>
+            <span>Tạo đơn</span>
+          </a>
+        }
+        <a id="btn_refresh" class="button is-small is-link" onclick="refreshData(true)">
+          <span class="icon">
+            <i class="feather icon-rotate-cw"></i>
+          </span>
+          <span>@TextData.Get("Làm mới")</span>
+        </a>
+      </div>
+    </div>
+    <div class="level-item">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-static is-small">Shop</label>
+        </div>
+        <div class="control">
+          <div class="select is-small is-fullwidth">
+            @Html.DropDownList("ddlShopId", (List<SelectListItem>)ViewBag.DdlShop,
+              new { @class = "has-text-weight-bold", @onchange = "changeShop()" })
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs is-boxed">
+  <ul>
+    <li class="is-active">
+      <a href="@Url.Action("News", "Sheet", new { shop = shop })">
+        @TextData.Get("Đơn chưa xử lý")
+      </a>
+    </li>
+    @if (!IsSimple)
+    {
+      <li>
+        <a href="@Url.Action("Process", "Sheet", new { shop = shop })">
+          @TextData.Get("Đơn đang xử lý")
+        </a>
+      </li>
+    }
+    <li>
+      <a href="@Url.Action("Index", "Sheet", new { tab = 2, shop = shop })">
+        @TextData.Get("Đơn đã tạo")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Index", "Sheet", new { tab = 3, shop = shop })">
+        @TextData.Get("Đơn tạo lỗi")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Index", "Sheet", new { tab = 4, shop = shop })">
+        @TextData.Get("Đơn hủy")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Product", "Sheet", new { shop = shop })">
+        @TextData.Get("Sản phẩm")
+      </a>
+    </li>
+    @if (IsReport)
+    {
+      <li>
+        <a href="@Url.Action("Ads", "Ads", new { shop = shop })">
+          @TextData.Get("Chi phí Ads")
+        </a>
+      </li>
+      <li>
+        <a href="@Url.Action("Report", "Sheet", new { shop = shop })">
+          @TextData.Get("Thống kê")
+        </a>
+      </li>
+    }
+  </ul>
+</div>
+
+@using (Html.BeginForm())
+{
+  <ul class="columns is-multiline is-variable is-2" style="margin-bottom: 1rem;">
+    <li class="column is-one-fifth">
+      @Html.TextBox("phone", (string)ViewBag.Phone, new { @class = "input is-small", placeholder = TextData.Get("Điện thoại") })
+    </li>
+    <li class="column is-one-fifth">
+      @Html.TextBox("product", (string)ViewBag.Product,
+        new { @class = "input is-small", placeholder = TextData.Get("Sản phẩm"), list = "products", @autocomplete = "off" })
+      <datalist id="products">
+        <option value="@TextData.Get("Sản phẩm không xác định")" />
+        @foreach (var item in listProduct)
+        {
+          <option value="@item" />
+        }
+      </datalist>
+    </li>
+    <li class="column is-narrow">
+      <button id="filterSubmit" type="submit" class="button is-info is-small">
+        <span class="icon">
+          <i class="feather icon-search"></i>
+        </span>
+        <span>@TextData.Get("Tìm kiếm")</span>
+      </button>
+      @Html.Hidden("shopId", shop)
+    </li>
+    <li class="column"></li>
+    @if (!IsSimple)
+    {
+      <li class="column is-narrow">
+        <div class="field has-addons">
+          <div class="control is-expanded">
+            <div class="dropdown is-hoverable">
+              <div class="dropdown-trigger">
+                <a class="button is-small">
+                  <span>@TextData.Get("Chọn nhân viên chia đơn")</span>
+                  <span class="icon is-small">
+                    <i class="feather icon-chevron-down"></i>
+                  </span>
+                </a>
+              </div>
+              <div class="dropdown-menu">
+                <div class="dropdown-content">
+                  @foreach (var item in listUser)
+                  {
+                    <div class="dropdown-item">
+                      <label class="checkbox is-size-7 has-text-weight-medium">
+                        <input type="checkbox" data-id="@item.UserId" data-group="user">
+                        <span>@item.Name</span>
+                      </label>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="control">
+            <a class="button is-link is-small" onclick="changeUserProcess()">
+              <span class="icon">
+                <i class="feather icon-save"></i>
+              </span>
+              <span>@TextData.Get("Lưu")</span>
+            </a>
+          </div>
+        </div>
+      </li>
+    }
+  </ul>
+}
+
+<table id="list_sheet" class="table is-vcentered is-hoverable is-fullwidth is-size-7">
+  <thead>
+    <tr>
+      <th width="200px">
+        <label class="checkbox">
+          <input type="checkbox" class="js_cb_all mr-2" data-group="sheet">
+          <span>@TextData.Get("Khách hàng")</span>
+        </label>
+      </th>
+      <th width="120px">@TextData.Get("Điện thoại")</th>
+      <th width="20%">@TextData.Get("Địa chỉ")</th>
+      <th>@TextData.Get("Sản phẩm")</th>
+      <th width="100px">@TextData.Get("Ngày đặt")</th>
+      <th width="90px">ShopId</th>
+      <th width="90px">@TextData.Get("Xử lý")</th>
+      <th width="90px"></th>
+    </tr>
+  </thead>
+  <tbody>
+    @foreach (var item in listOrder)
+    {
+      var product = Url.Action("News", "Sheet",
+        new
+        {
+          shop = item.ShopId,
+          product = (string.IsNullOrEmpty(item.ProcessProduct) ? "0" : item.ProcessProduct.Replace(" ", "-"))
+        });
+
+      <tr id="row_@item.Id">
+        <td>
+          <div>
+            <label class="checkbox">
+              <input type="checkbox" class="js_cb_list mr-2" data-id="@item.Id" data-group="sheet">
+              <span>@item.Name</span>
+            </label>
+          </div>
+          <div id="msg_@item.Id" class="is-family-code has-text-danger is-size-7">
+            @item.Error
+          </div>
+        </td>
+        <td>
+          <div class="js_copy has-text-link" data-clipboard-text="@item.Phone">@item.Phone</div>
+        </td>
+        <td>
+          <span>@item.Location.Replace("|", "; ")</span>
+        </td>
+        <td>
+          <a class="has-text-weight-medium" href="@product">@item.Product</a>
+          @if (!string.IsNullOrEmpty(item.ProcessCode))
+          {
+            <span> - Code: @item.ProcessCode</span>
+          }
+          @if (!string.IsNullOrEmpty(item.Size) && item.Size != item.ProductOther.Trim().ToLower())
+          {
+            <div title="Size">@item.Size</div>
+          }
+          @if (!string.IsNullOrEmpty(item.Color) && item.Color != item.ProductOther.Trim().ToLower())
+          {
+            <div title="Color">@item.Color</div>
+          }
+          @if (!string.IsNullOrEmpty(item.ProductOther))
+          {
+            <div title="Upsale">@item.ProductOther</div>
+          }
+          @if (!string.IsNullOrEmpty(item.Note))
+          {
+            <div class="is-italic">@item.Note</div>
+          }
+        </td>
+        <td>
+          <div title="@string.Format("{0:dd/MM/yyyy}", item.Date)">
+            @string.Format("{0:dd/MM, HH:mm:ss}", item.Date)
+          </div>
+        </td>
+        <td>
+          <a target="_blank" href="@Url.Action("Shop", "Config", new { @id = item.ShopId })">
+            @item.ShopId
+          </a>
+        </td>
+        <td data-status>
+          @if (IsSimple)
+          {
+            <a id="status_@item.Id" class="action-status button is-small" onclick="createOrder('@item.Id')">Lên đơn</a>
+          }
+          else
+          {
+            <span id="status_@item.Id" class="action-status button is-small">Chờ xử lý</span>
+          }
+        </td>
+        <td>
+          <a id="delete_@item.Id" onclick="deleteItem('@item.Id')"
+             class="button is-small has-text-danger @(item.ProcessId == 2 ? "is-hidden" : "")">
+            <span class="icon">
+              <i class="feather icon-x"></i>
+            </span>
+            <span>@TextData.Get("Hủy")</span>
+          </a>
+        </td>
+      </tr>
+    }
+    @if (listOrder.Count < 1)
+    {
+      <tr>
+        <td colspan="8">
+          <div class="noresult">
+            <i class="s5em feather icon-alert-circle"></i>
+            <span>@TextData.Get("Không tìm thấy dữ liệu")</span>
+          </div>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
+
+@Html.Raw(ViewBag.Pagination)

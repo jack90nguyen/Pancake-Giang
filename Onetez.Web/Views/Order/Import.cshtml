@@ -1,0 +1,50 @@
+﻿
+@{
+    ViewBag.SeoTitle = "Cập nhật nhân viên sale";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+    <div class="columns is-centered">
+        <div class="column is-narrow" style="width: var(--form-small)">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-header-title">
+                        @ViewBag.SeoTitle
+                    </span>
+                </div>
+                <div class="card-content">
+                    @using (Html.BeginForm("Import", "Order", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                    {
+                        @Html.Raw(ViewBag.Notification)
+
+                        <div class="field is-hidden">
+                            <label class="label">Ngày cập nhật</label>
+                            <div class="control">
+                                @Html.TextBox("date", string.Format("{0:yyyy-MM-dd}", DateTime.Now), new { @class = "input" })
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label">Chọn file excel</label>
+                            <div class="control">
+                                <input type="file" name="file" class="input" accept=".xls,.xlsx" />
+                            </div>
+                        </div>
+
+                        <div class="field is-grouped">
+                            <div class="control">
+                                <button type="submit" name="save" class="button is-link">Cập nhật</button>
+                            </div>
+                            <div class="control">
+                                <a class="button is-link is-light" href="@Url.Action("Index","Order")">Quay lại</a>
+                            </div>
+                        </div>
+
+                        <div>
+                            @Html.Raw(ViewBag.TestData)
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>

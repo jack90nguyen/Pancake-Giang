@@ -1,0 +1,60 @@
+﻿@using Onetez.Web.Modules
+@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  ViewBag.SeoTitle = @TextData.Get("Đăng nhập");
+}
+<style>
+  main {
+    height: 100vh;
+  }
+
+  main section .columns {
+    height: 100%;
+    display: flex;
+    padding: 0px 20px;
+  }
+</style>
+
+<div class="columns is-centered is-vcentered">
+  <div class="column is-narrow" style="width: var(--form-small)">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-header-title">
+          @TextData.Get("Đăng nhập hệ thống")
+        </span>
+      </div>
+      <div class="card-content">
+        @using (Html.BeginForm())
+        {
+          @Html.Raw(ViewBag.Notification)
+
+          <div class="field">
+            <label class="label">Username</label>
+            <div class="control has-icons-left">
+              @Html.TextBox("username", "", new { @class = "input", @placeholder = "Tên đăng nhập" })
+              <span class="icon is-small is-left">
+                <i class="s20 feather icon-user"></i>
+              </span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Password</label>
+            <div class="control has-icons-left">
+              @Html.TextBox("password", "", new { @class = "input", @placeholder = "Mật khẩu", @type = "password" })
+              <span class="icon is-small is-left">
+                <i class="s20 feather icon-lock"></i>
+              </span>
+            </div>
+          </div>
+
+          <div class="field is-grouped">
+            <div class="control">
+              <button type="submit" name="login" class="button is-link">@TextData.Get("Đăng nhập")</button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

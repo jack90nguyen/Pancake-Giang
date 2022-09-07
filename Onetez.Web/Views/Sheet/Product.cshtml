@@ -1,0 +1,480 @@
+﻿@using System.Configuration;
+@using Onetez.Core.DbContext;
+@using Onetez.Web.Modules;
+@using Onetez.Dal.EntityClasses;
+@using Onetez.Core.Libs;
+@{
+  ViewBag.SeoTitle = "Sheet: " + TextData.Get("Sản phẩm");
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  var IsPancake = Convert.ToBoolean(ConfigurationManager.AppSettings["IsPancake"]);
+  var IsReport = Convert.ToBoolean(ConfigurationManager.AppSettings["IsReport"]);
+  var IsSimple = Convert.ToBoolean(ConfigurationManager.AppSettings["IsSimple"]);
+  int shop = Request.QueryString["shop"] != null ? Convert.ToInt32(Request.QueryString["shop"]) : 0;
+  var shopInfo = DbShop.Get(shop);
+  var listProduct = (List<ProductsEntity>)ViewBag.ListProduct;
+  bool RealWeight = Convert.ToBoolean(ConfigurationManager.AppSettings["RealWeight"]);
+  var jsonProduct = "[";
+  foreach (var item in listProduct)
+  {
+    var key = (ConvertString.NoVNeseLowerOverSpecial(item.ProductName) + item.ProductName + item.ProductDisplayId + item.DisplayId).ToLower();
+    if (jsonProduct.Length > 1)
+    {
+      jsonProduct += ", ";
+    }
+    jsonProduct += "{ 'id':'" + item.Id + "', 'name':'" + item.ProductName.Replace("\"", "") + "', 'msp':'" + item.ProductDisplayId + "', 'mmm':'" + item.DisplayId + "', 'price':'" + string.Format("{0:0,0}", item.Price) + "', 'key':'" + key + "' }";
+  }
+  jsonProduct += "]";
+}
+@section Javascript{
+  <script>
+    const list_product = JSON.parse(`@Html.Raw(jsonProduct.Replace("'", "\""))`);
+  </script>
+  @Scripts.Render("~/bundles-product-list/js")
+}
+
+<div class="level is-mobile">
+  <div class="level-left">
+    <div class="level-item">
+      <div>
+        <div class="title is-5 is-spaced is-uppercase">
+          @ViewBag.SeoTitle
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="level-right">
+    @if (IsPancake)
+    {
+      <div class="level-item">
+        <a class="button is-small is-link"
+           href="@Url.Action("Product", "Sheet", new { refresh = true, shop = shop })">
+          <span class="icon">
+            <i class="feather icon-rotate-cw"></i>
+          </span>
+          <span>Làm mới</span>
+        </a>
+      </div>
+    }
+    <div class="level-item">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-static is-small">Shop</label>
+        </div>
+        <div class="control">
+          <div class="select is-small is-fullwidth">
+            @Html.DropDownList("ddlShopId", (List<SelectListItem>)ViewBag.DdlShop,
+              new { @class = "has-text-weight-bold", @onchange = "changeShop()" })
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs is-boxed">
+  <ul>
+    <li>
+      <a href="@Url.Action("News", "Sheet", new { shop = shop })">
+        @TextData.Get("Đơn chưa xử lý")
+      </a>
+    </li>
+    @if (!IsSimple)
+    {
+      <li>
+        <a href="@Url.Action("Process", "Sheet", new { shop = shop })">
+          @TextData.Get("Đơn đang xử lý")
+        </a>
+      </li>
+    }
+    <li>
+      <a href="@Url.Action("Index", "Sheet", new { tab = 2, shop = shop })">
+        @TextData.Get("Đơn đã tạo")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Index", "Sheet", new { tab = 3, shop = shop })">
+        @TextData.Get("Đơn tạo lỗi")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Index", "Sheet", new { tab = 4, shop = shop })">
+        @TextData.Get("Đơn hủy")
+      </a>
+    </li>
+    <li class="is-active">
+      <a href="@Url.Action("Product", "Sheet", new { shop = shop })">
+        @TextData.Get("Sản phẩm")
+      </a>
+    </li>
+    @if (IsReport)
+    {
+      <li>
+        <a href="@Url.Action("Ads", "Ads", new { shop = shop })">
+          @TextData.Get("Chi phí Ads")
+        </a>
+      </li>
+      <li>
+        <a href="@Url.Action("Report", "Sheet", new { shop = shop })">
+          @TextData.Get("Thống kê")
+        </a>
+      </li>
+    }
+  </ul>
+</div>
+
+@Html.Raw(ViewBag.Notification)
+
+<div class="buttons is-right mb-4">
+  @if (!IsPancake)
+  {
+    <a class="button is-small is-link" onclick="editItem('')">
+      <span class="icon">
+        <i class="feather icon-plus"></i>
+      </span>
+      <span>@TextData.Get("Thêm sản phẩm mới")</span>
+    </a>
+  }
+  <a class="button is-small is-success mr-0" onclick="popupCombo('')">
+    <span class="icon">
+      <i class="feather icon-plus"></i>
+    </span>
+    <span>@TextData.Get("Thêm sản phẩm combo")</span>
+  </a>
+</div>
+
+<table id="list_sheet" class="table is-hoverable is-fullwidth font-14">
+  <thead>
+    <tr>
+      <th>@TextData.Get("Tên trong Google Sheet")</th>
+      <th width="15%">@TextData.Get("Tên sản phẩm")</th>
+      <th width="10%">@TextData.Get("Mã sản phẩm")</th>
+      <th width="10%">@TextData.Get("Mã mẫu mã")</th>
+      <th width="7%">Size</th>
+      <th width="7%">Color</th>
+      <th width="7%">@TextData.Get("Đơn giá")</th>
+      <th width="7%">@TextData.Get("Giảm giá")</th>
+      <th width="7%">@TextData.Get("Số lượng")</th>
+      <th width="8%" class="@(RealWeight ? "" : "is-hidden")">@TextData.Get("Trọng lượng")</th>
+      <th width="60px"></th>
+    </tr>
+  </thead>
+  <tbody>
+    @foreach (var item in (List<ProductsEntity>)ViewBag.ListProduct)
+    {
+      <tr id="row_@item.Id">
+        @if (item.IsCombo)
+        {
+          <td colspan="2">
+            <span>@item.SheetCode</span>
+          </td>
+        }
+        else
+        {
+          <td>
+            <span>@item.SheetCode</span>
+          </td>
+          <td>
+            <a onclick="editItem('@item.Id')">
+              @item.ProductName
+            </a>
+          </td>
+        }
+        <td>
+          <span title="@item.ProductId">
+            @item.ProductDisplayId
+          </span>
+        </td>
+        <td>
+          <span title="@item.VariationId">
+            @item.DisplayId
+          </span>
+        </td>
+        <td>
+          <span>@item.Size</span>
+        </td>
+        <td>
+          <span>@item.Color</span>
+        </td>
+        <td>
+          @if (item.Price % 1 > 0)
+          {
+            <span class="has-text-danger">@string.Format("{0:0.00}", item.Price)</span>
+          }
+          else
+          {
+            <span class="has-text-danger">@string.Format("{0:0,0}", item.Price)</span>
+          }
+        </td>
+        <td>
+          @if (item.Discount > 0 && item.Discount % 1 > 0)
+          {
+            <span class="has-text-success">@string.Format("{0:0.00}", item.Discount)</span>
+          }
+          else if(item.Discount > 0)
+          {
+            <span class="has-text-danger">@string.Format("{0:0,0}", item.Discount)</span>
+          }
+        </td>
+        <td>
+          <span>@item.Quantity</span>
+        </td>
+        <td class="@(RealWeight ? "" : "is-hidden")">
+          <span>@item.Weight</span>
+        </td>
+        <td class="has-text-centered">
+          <div class="dropdown is-hoverable is-right is-menu">
+            <div class="dropdown-trigger">
+              <span class="icon">
+                <i class="s18 feather icon-more-vertical"></i>
+              </span>
+            </div>
+            <div class="dropdown-menu">
+              <div class="dropdown-content">
+                @if (item.IsCombo)
+                {
+                  <a class="dropdown-item has-icon" onclick="popupCombo('@item.Id')">
+                    <span class="icon"><i class="feather icon-edit"></i></span>
+                    <span>@TextData.Get("Chỉnh sửa")</span>
+                  </a>
+                }
+                else
+                {
+                  <a class="dropdown-item has-icon" onclick="editItem('@item.Id')">
+                    <span class="icon"><i class="feather icon-edit"></i></span>
+                    <span>@TextData.Get("Chỉnh sửa")</span>
+                  </a>
+                }
+                <a class="dropdown-item has-icon" onclick="duplicateItem('@item.Id')">
+                  <span class="icon"><i class="feather icon-copy"></i></span>
+                  <span>@TextData.Get("Nhân bản")</span>
+                </a>
+                <hr class="dropdown-divider">
+                <a class="dropdown-item has-text-danger has-icon" onclick="deleteItem('@item.Id')">
+                  <span class="icon"><i class="feather icon-trash-2"></i></span>
+                  <span>@TextData.Get("Xóa")</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <!-- Sản phẩm trong combo -->
+      if (item.IsCombo)
+      {
+        var childs = DbProduct.GetList(item.ShopId, item.Id);
+        foreach (var child in childs)
+        {
+          <tr class="child_@item.Id">
+            <td align="right">
+              <span>└─</span>
+            </td>
+            <td>
+              <span>
+                @child.ProductName
+              </span>
+            </td>
+            <td>
+              <span title="@child.ProductId">
+                @child.ProductDisplayId
+              </span>
+            </td>
+            <td>
+              <span title="@child.VariationId">
+                @child.DisplayId
+              </span>
+            </td>
+            <td>
+              <span class="has-text-danger">@string.Format("{0:0,0}", child.Price)</span>
+            </td>
+            <td></td>
+            <td>
+              <span>@child.Quantity</span>
+            </td>
+            <td class="@(RealWeight ? "" : "is-hidden")">
+              <span>@child.Weight</span>
+            </td>
+            <td></td>
+          </tr>
+        }
+      }
+    }
+  </tbody>
+</table>
+
+<div id="popup_combo" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-card" style="width: var(--form-medium); overflow: visible;">
+    <div class="modal-card-head">
+      <p class="modal-card-title modal-card-title is-size-5 has-text-weight-semibold">@TextData.Get("Sản phẩm combo")</p>
+      <button class="delete" onclick="closeModal('popup_combo')"></button>
+    </div>
+    <div class="modal-card-body" style="overflow: visible;">
+      <ul class="columns is-multiline">
+        <li class="column is-four-fifths">
+          <div class="field">
+            <label class="label font-14">@TextData.Get("Tên trong Google Sheet")</label>
+            <div class="control">
+              @Html.TextBox("combo_sheetcode", "", new { @class = "input is-small", @placeholder = "Tên trong Google Sheet" })
+            </div>
+          </div>
+        </li>
+        <li class="column is-one-fifth">
+          <div class="field">
+            <label class="label font-14">@TextData.Get("Giảm giá")</label>
+            <div class="control">
+              @Html.TextBox("combo_discount", "", new { @class = "input is-small", @type = "number" })
+            </div>
+          </div>
+        </li>
+        <li class="column is-full">
+          <div class="field has-addons">
+            <div class="control is-expanded">
+              <input id="combo_product" type="hidden" value="" />
+              <input id="combo_search" class="input is-small" type="text" autocomplete="off" placeholder="Tìm sản phẩm cần thêm vào combo..." />
+              <ul id="combo_suggest" class="suggest is-size-7" style="display: none;"></ul>
+            </div>
+            <div class="control">
+              <a class="button is-success is-small" onclick="addToCombo()">@TextData.Get("Thêm mới")</a>
+            </div>
+          </div>
+        </li>
+        <li class="column is-full">
+          <table class="table is-fullwidth font-14">
+            <thead>
+              <tr>
+                <th class="has-text-weight-normal">@TextData.Get("Sản phẩm")</th>
+                <th class="has-text-weight-normal" width="80px">@TextData.Get("Mã sản phẩm")</th>
+                <th class="has-text-weight-normal" width="80px">@TextData.Get("Mã mẫu mã")</th>
+                <th class="has-text-weight-normal" width="120px">@TextData.Get("Đơn giá")</th>
+                <th class="has-text-weight-normal" width="80px">@TextData.Get("Số lượng")</th>
+                <th class="has-text-weight-normal" width="80px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr id="pro_${item.id}">
+                <td>${item.name}</td>
+                <td>${item.msp}</td>
+                <td>${item.mmm}</td>
+                <td><input class="input is-small is_price" type="number" style="width: 100px;" value="${item.price}"></td>
+                <td><input class="input is-small is_quantity" type="number" style="width: 60px;" value="${item.quantity}"></td>
+                <td align="center">
+                  <a class="icon icon_save" onclick="updateItemCombo('${item.id}')">
+                    <i class="feather icon-save"></i>
+                  </a>
+                  <a class="icon has-text-danger" onclick="deleteItemCombo('${item.id}')">
+                    <i class="feather icon-x"></i>
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </li>
+      </ul>
+    </div>
+    <div class="modal-card-foot">
+      <button class="btn_save button is-link" onclick="updateCombo()">@TextData.Get("Cập nhật")</button>
+      <button class="button" onclick="closeModal('popup_combo')">@TextData.Get("Hủy")</button>
+      <input id="combo_id" type="hidden" />
+    </div>
+  </div>
+</div>
+
+<div id="popup_product" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <div class="modal-card-head">
+      <p class="modal-card-title modal-card-title is-size-5 has-text-weight-semibold">@TextData.Get("Sản phẩm")</p>
+      <button class="delete" onclick="closeModal('popup_product')"></button>
+    </div>
+    <div class="modal-card-body">
+      <div class="columns is-multiline is-variable is-1">
+        <div class="column is-full">
+          <div class="field">
+            <label class="label font-14">@TextData.Get("Tên trong Google Sheet")</label>
+            <div class="control">
+              <input class="input is-small" type="text" data-code />
+            </div>
+          </div>
+        </div>
+        <div class="column is-full">
+          <div class="field">
+            <label class="label font-14">@TextData.Get("Tên sản phẩm")</label>
+            <div class="control">
+              <input class="input is-small" type="text" data-name />
+            </div>
+          </div>
+        </div>
+        <div class="column is-one-quarter">
+          <div class="field">
+            <label class="label font-14">@TextData.Get("Mã sản phẩm")</label>
+            <div class="control">
+              <input class="input is-small" type="text" data-product />
+            </div>
+          </div>
+        </div>
+        <div class="column is-one-quarter">
+          <div class="field">
+            <label class="label font-14">@TextData.Get("Mã mẫu mã")</label>
+            <div class="control">
+              <input class="input is-small" type="text" data-display />
+            </div>
+          </div>
+        </div>
+        <div class="column is-one-quarter">
+          <div class="field">
+            <label class="label font-14">Size</label>
+            <div class="control">
+              <input class="input is-small" type="text" data-size />
+            </div>
+          </div>
+        </div>
+        <div class="column is-one-quarter">
+          <div class="field">
+            <label class="label font-14">Color</label>
+            <div class="control">
+              <input class="input is-small" type="text" data-color />
+            </div>
+          </div>
+        </div>
+        <div class="column is-one-quarter">
+          <div class="field">
+            <label class="label font-14">@TextData.Get("Đơn giá")</label>
+            <div class="control">
+              <input class="input is-small" type="number" data-price step="0.01" />
+            </div>
+          </div>
+        </div>
+        <div class="column is-one-quarter">
+          <div class="field">
+            <label class="label font-14">@TextData.Get("Giảm giá")</label>
+            <div class="control">
+              <input class="input is-small" type="number" data-discount step="0.01" />
+            </div>
+          </div>
+        </div>
+        <div class="column is-one-quarter">
+          <div class="field">
+            <label class="label font-14">@TextData.Get("Số lượng")</label>
+            <div class="control">
+              <input class="input is-small" type="number" data-quantity />
+            </div>
+          </div>
+        </div>
+        <div class="@(RealWeight ? "column is-one-quarter" : "is-hidden")">
+          <div class="field">
+            <label class="label font-14">@TextData.Get("Trọng lượng")</label>
+            <div class="control">
+              <input class="input is-small" type="number" data-weight />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-card-foot">
+      <button class="btn_save button is-link" onclick="updateProduct()">@TextData.Get("Cập nhật")</button>
+      <button class="button" onclick="closeModal('popup_product')">@TextData.Get("Hủy")</button>
+      <input id="product_shop" type="hidden" value="@shop" />
+      <input id="product_id" type="hidden" />
+    </div>
+  </div>
+</div>

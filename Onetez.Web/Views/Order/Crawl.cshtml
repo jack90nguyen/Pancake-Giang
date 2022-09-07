@@ -1,0 +1,56 @@
+﻿@using Onetez.Core.DbContext;
+@using Onetez.Dal.EntityClasses;
+@{
+    ViewBag.SeoTitle = "Quét dữ liệu đơn hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var shopList = DbShop.GetList();
+}
+@section Javascript{
+    @Scripts.Render("~/bundles-order-crawl/js")
+}
+
+<div class="columns is-centered">
+    <div class="column is-narrow" style="width: var(--form-medium)">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-title">
+                    @ViewBag.SeoTitle
+                </span>
+            </div>
+            <div class="card-content">
+                <ul class="columns is-multiline is-vcentered is-mobile">
+                    @foreach (var item in shopList)
+                    {
+                        <li class="column is-half">
+                            <a class="has-text-weight-bold is-uppercase" href="@Url.Action("Shop","Config", new { @id = item.Id })">
+                                @item.Name
+                            </a>
+                        </li>
+                        <li class="column is-one-quarter">
+                            <div class="tags has-addons">
+                                <span class="tag is-dark">Đã quét</span>
+                                <span id="result_@item.Id" class="tag is-success has-text-weight-bold">0</span>
+                            </div>
+                        </li>
+                        <li class="column is-one-quarter has-text-right">
+                            <a id="crawl_@item.Id" class="button is-link is-small is-rounded" onclick="crawlOrder(@item.Id, 1)">
+                                LÀM MỚI
+                            </a>
+                        </li>
+                        <li class="column is-full">
+                            <hr style="margin: 0px;" />
+                        </li>
+                    }
+                    <li class="column is-full has-text-right">
+                        <a class="button" href="/APIv1/Order/ReadShipLog" target="_blank">
+                            Trạng thái
+                        </a>
+                        <a class="button" href="@Url.Action("Index", "Order")">
+                            Quay lại
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

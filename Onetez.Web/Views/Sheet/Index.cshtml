@@ -1,0 +1,404 @@
+﻿@using System.Data;
+@using System.Configuration;
+@using Onetez.Core.DbContext;
+@using Onetez.Web.Modules;
+@using Onetez.Dal.EntityClasses;
+@using Onetez.Dal.Models;
+@model DataTable
+@{
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  var IsPancake = Convert.ToBoolean(ConfigurationManager.AppSettings["IsPancake"]);
+  var IsReport = Convert.ToBoolean(ConfigurationManager.AppSettings["IsReport"]);
+  var IsSimple = Convert.ToBoolean(ConfigurationManager.AppSettings["IsSimple"]);
+  var UserInfo = (UserModel)ViewBag.UserInfo;
+  int tab = (int)ViewBag.TabId;
+  int shop = (int)ViewBag.ShopId;
+  var shopInfo = DbShop.Get(shop);
+  var listUser = (List<UsersEntity>)ViewBag.ListUser;
+  var listProduct = DbProduct.GetListName(shop);
+  ViewBag.SeoTitle = "Sheet: " + TextData.Get("Đơn đã tạo");
+  if (tab == 3)
+  {
+    ViewBag.SeoTitle = "Sheet: " + TextData.Get("Đơn tạo lỗi");
+  }
+  if (tab == 4)
+  {
+    ViewBag.SeoTitle = "Sheet: " + TextData.Get("Đơn hủy");
+  }
+}
+@section Javascript{
+  @Scripts.Render("~/bundles-sheet-list/js")
+}
+
+<div class="level">
+  <div class="level-left">
+    <div class="level-item">
+      <div>
+        <div class="title is-5 is-spaced is-uppercase">
+          @ViewBag.SeoTitle
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="level-left">
+    <div class="level-item">
+      @if (tab == 3)
+      {
+        <a class="button is-small is-danger" onclick="tryOrderError(0)">
+          <span class="icon">
+            <i class="feather icon-rotate-cw"></i>
+          </span>
+          <span>@TextData.Get("Thử lại tất cả")</span>
+        </a>
+      }
+    </div>
+    <div class="level-item">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-static is-small">Shop</label>
+        </div>
+        <div class="control">
+          <div class="select is-small is-fullwidth">
+            @Html.DropDownList("ddlShopId", (List<SelectListItem>)ViewBag.DdlShop,
+              new { @class = "has-text-weight-bold", @onchange = "changeShop()" })
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs is-boxed">
+  <ul>
+    <li>
+      <a href="@Url.Action("News", "Sheet", new { shop = shop })">
+        @TextData.Get("Đơn chưa xử lý")
+      </a>
+    </li>
+    @if (!IsSimple)
+    {
+      <li>
+        <a href="@Url.Action("Process", "Sheet", new { shop = shop })">
+          @TextData.Get("Đơn đang xử lý")
+        </a>
+      </li>
+    }
+    <li class="@(tab == 2 ? "is-active" : "")">
+      <a href="@Url.Action("Index", "Sheet", new { tab = 2, shop = shop })">
+        @TextData.Get("Đơn đã tạo")
+      </a>
+    </li>
+    <li class="@(tab == 3 ? "is-active" : "")">
+      <a href="@Url.Action("Index", "Sheet", new { tab = 3, shop = shop })">
+        @TextData.Get("Đơn tạo lỗi")
+      </a>
+    </li>
+    <li class="@(tab == 4 ? "is-active" : "")">
+      <a href="@Url.Action("Index", "Sheet", new { tab = 4, shop = shop })">
+        @TextData.Get("Đơn hủy")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Product", "Sheet", new { shop = shop })">
+        @TextData.Get("Sản phẩm")
+      </a>
+    </li>
+    @if (IsReport)
+    {
+      <li>
+        <a href="@Url.Action("Ads", "Ads", new { shop = shop })">
+          @TextData.Get("Chi phí Ads")
+        </a>
+      </li>
+      <li>
+        <a href="@Url.Action("Report", "Sheet", new { shop = shop })">
+          @TextData.Get("Thống kê")
+        </a>
+      </li>
+    }
+  </ul>
+</div>
+
+@using (Html.BeginForm())
+{
+  <ul class="columns is-multiline is-variable is-1" style="margin-bottom: 1rem;">
+    <li class="column is-narrow" style="width: 220px;">
+      @Html.TextBox("product", (string)ViewBag.Product,
+        new { @class = "input is-small", placeholder = TextData.Get("Sản phẩm"), list = "products", @autocomplete = "off" })
+      <datalist id="products">
+        <option value="@TextData.Get("Sản phẩm không xác định")" />
+        @foreach (var item in listProduct)
+        {
+          <option value="@item" />
+        }
+      </datalist>
+    </li>
+    <li class="column is-narrow" style="width: 120px;">
+      @Html.TextBox("phone", (string)ViewBag.Phone, new { @class = "input is-small", placeholder = TextData.Get("Điện thoại") })
+    </li>
+    <li class="column is-narrow @(IsPancake ? "is-hidden" : "")" style="width: 220px;">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-small is-static">@TextData.Get("Danh mục")</label>
+        </div>
+        <div class="control is-expanded">
+          <div class="select is-small is-fullwidth">
+            @Html.DropDownList("category", (List<SelectListItem>)ViewBag.DdlCategory)
+          </div>
+        </div>
+      </div>
+    </li>
+    <li class="@(IsSimple ? "is-hidden" : "column is-narrow")">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-small is-static">@TextData.Get("Nhân viên")</label>
+        </div>
+        <div class="control is-expanded">
+          <div class="select is-small is-fullwidth">
+            @Html.DropDownList("userId", (List<SelectListItem>)ViewBag.DdlUser)
+          </div>
+        </div>
+      </div>
+    </li>
+    <li class="column is-narrow">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-small is-static">@TextData.Get("Từ ngày")</label>
+        </div>
+        <div class="control is-expanded" style="width: 130px;">
+          @Html.TextBox("start", (string)ViewBag.DateStart, new { @class = "input is-small", type = "date" })
+        </div>
+      </div>
+    </li>
+    <li class="column is-narrow">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-small is-static">@TextData.Get("Đến ngày")</label>
+        </div>
+        <div class="control is-expanded" style="width: 130px;">
+          @Html.TextBox("end", (string)ViewBag.DateEnd, new { @class = "input is-small", type = "date" })
+        </div>
+      </div>
+    </li>
+    <li class="column is-narrow">
+      <button id="filterSubmit" type="submit" class="button is-info is-small">
+        <span class="icon">
+          <i class="feather icon-search"></i>
+        </span>
+        <span>@TextData.Get("Tìm kiếm")</span>
+      </button>
+      @Html.Hidden("shopId", shop)
+      @Html.Hidden("tabId", tab)
+    </li>
+  </ul>
+}
+
+<div class="table_stick">
+  <table id="list_sheet" class="table is-hoverable is-fullwidth is-size-7">
+    <thead>
+      <tr>
+        <th width="120px" class="is_sticky" style="left: 1px;">@TextData.Get("Khách hàng")</th>
+        <th width="100px" class="is_sticky is_last" style="left: 121px;">@TextData.Get("Điện thoại")</th>
+        <th width="600px">
+          <span class="is-inline-block mr-5 pr-3">State</span>
+          <span class="is-inline-block mr-3">City/District</span>
+          <span class="is-inline-block mr-3">Locality/Landmark</span>
+          <span class="is-inline-block">Address</span>
+          <span class="is-inline-block mr-6 is-pulled-right">Pin Code</span>
+        </th>
+        <th width="250px">@TextData.Get("Sản phẩm")</th>
+        <th width="110px">@(tab == 4 ? TextData.Get("Ngày hủy") : TextData.Get("Ngày lên đơn"))</th>
+        <th width="120px">@TextData.Get("Nhân viên")</th>
+        @if (IsReport)
+        {
+          <th width="80px">@TextData.Get("Doanh thu")</th>
+        }
+        <th width="12%">@TextData.Get("Ghi chú")</th>
+        <th width="140px">@TextData.Get("Trạng thái")</th>
+        <th width="120px" align="center">@TextData.Get("Xử lý")</th>
+      </tr>
+    </thead>
+    <tbody>
+      @foreach (DataRow item in Model.Rows)
+      {
+        var user = listUser.SingleOrDefault(x => x.UserId == (string)item["UserId"]);
+        var process = DbSheet.Process((int)item["ProcessId"]);
+        var product = Url.Action("Index", "Sheet",
+        new
+        {
+          tab = tab,
+          shop = item["ShopId"],
+          product = (string.IsNullOrEmpty((string)item["ProcessProduct"]) ? "0" : item["ProcessProduct"].ToString().Replace(" ", "-"))
+        });
+
+        <tr id="row_@item["Id"]">
+          <td class="is_sticky" style="left: 1px;">
+            <div class="text_1line" style="width: 109px;">@item["Name"]</div>
+          </td>
+          <td class="is_sticky is_last" style="left: 121px;">
+            <div class="js_copy has-text-link has-text-weight-semibold" data-clipboard-text="@item["Phone"]">@item["Phone"]</div>
+            <div id="msg_@item["Id"]" class="is-family-code has-text-danger">
+              @item["Error"]
+            </div>
+          </td>
+          <td>
+            <span>@item["Location"].ToString().Replace("|", "; ")</span>
+          </td>
+          <td>
+            <a class="has-text-weight-semibold" href="@product">@item["Product"]</a>
+            @if (!string.IsNullOrEmpty(item["ProcessCode"].ToString()))
+            {
+              <span> - Code: @item["ProcessCode"]</span>
+            }
+            @if (!string.IsNullOrEmpty((string)item["Size"]) && (string)item["Size"] != item["ProductOther"].ToString().Trim().ToLower())
+            {
+              <span title="Size">(@item["Size"])</span>
+            }
+            @if (!string.IsNullOrEmpty((string)item["Color"]) && (string)item["Color"] != item["ProductOther"].ToString().Trim().ToLower())
+            {
+              <span title="Color">(@item["Color"])</span>
+            }
+            @if (!string.IsNullOrEmpty((string)item["ProductOther"]))
+            {
+              <span title="Upsale">(@item["ProductOther"])</span>
+            }
+            @if (!string.IsNullOrEmpty((string)item["Note"]))
+            {
+              <div class="is-italic">@item["Note"]</div>
+            }
+          </td>
+          <td>
+            <span>@string.Format("{0:dd/MM, HH:mm:ss}", tab == 4 ? item["CancelDate"] : item["AppleDate"])</span>
+          </td>
+          <td>
+            <span class="text_1line" style="width: 110px;">@(user != null ? user.Name : item["UserId".ToString()])</span>
+          </td>
+          @if (IsReport)
+          {
+            <td>
+              @item["Revenue"]
+            </td>
+          }
+          <td>
+            @Html.Raw((string)item["ProcessNote"])
+          </td>
+          <td data-status>
+            <div class="field has-addons">
+              <div class="control">
+                <div class="dropdown is-right">
+                  <div class="dropdown-trigger">
+                    <a class="button is-small" title="Xem lịch sử">
+                      <span class="icon">
+                        <i class="feather icon-info"></i>
+                      </span>
+                    </a>
+                  </div>
+                  <div class="dropdown-menu">
+                    <div id="logs_@item["Id"]" class="dropdown-content p-0" style="width: 260px;">
+                      @if (!string.IsNullOrEmpty((string)item["ProcessLog"]))
+                      {
+                        <div class="dropdown-item is-size-7 px-2">
+                          @Html.Raw((string)item["ProcessLog"])
+                        </div>
+                      }
+                      else
+                      {
+                        <div class="dropdown-item is-size-7 px-2 is-italic">
+                          @TextData.Get("Chưa có lịch sử xử lý")
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="control is-expanded">
+                @if (tab == 4)
+                {
+                  <span class="button is-small is-fullwidth">@process.name</span>
+                }
+                else if (!string.IsNullOrEmpty((string)item["OrderId"]))
+                {
+                  if (shopInfo != null)
+                  {
+                    if (IsPancake)
+                    {
+                      var link = "https://pos.pages.fm/api/v1/shops/" + shopInfo.Id + "/orders/"
+                        + item["OrderId"] + "?api_key=" + shopInfo.ApiKey;
+                      <a class="button is-small is-fullwidth has-text-link" href="@link" target="_blank">
+                        #@item["OrderId"]
+                      </a>
+                    }
+                    else if (UserInfo.user != "thahnv")
+                    {
+                      <a class="button is-small is-fullwidth has-text-link"
+                         href="https://docs.google.com/spreadsheets/d/@shopInfo.ApiKey" target="_blank">
+                        #@item["OrderId"]
+                      </a>
+                    }
+                    else
+                    {
+                      <a class="button is-small is-fullwidth has-text-link" onclick="updateOrder('@item["Id"]')">
+                        #@item["OrderId"]
+                      </a>
+                    }
+                  }
+                  else
+                  {
+                    <span class="button is-small is-fullwidth">#@item["OrderId"]</span>
+                  }
+                }
+                else
+                {
+                  <span class="button is-small is-fullwidth">@TextData.Get("Đã có lỗi")</span>
+                }
+              </div>
+            </div>
+          </td>
+          @if (tab == 3)
+          {
+            <td align="center">
+              <a id="status_@item["Id"]" class="action-status button is-small is-danger"
+                 onclick="createOrder('@item["Id"]')" title="Thử lại">
+                <span class="icon">
+                  <i class="feather icon-rotate-cw"></i>
+                </span>
+              </a>
+              <a id="empty_@item["Id"]" class="button is-small is-success"
+                 onclick="createOrderEmpty('@item["Id"]')" title="Tạo đơn trống">
+                <span class="icon">
+                  <i class="feather icon-arrow-up-circle"></i>
+                </span>
+              </a>
+              <a onclick="deleteItem('@item["Id"]')" class="button is-small has-text-danger" title="Hủy">
+                <span class="icon">
+                  <i class="feather icon-x"></i>
+                </span>
+              </a>
+            </td>
+          }
+          else if (tab == 2 || tab == 4)
+          {
+            <td align="center">
+              <a onclick="restoreItem('@item["Id"]')" class="button is-small is-danger is-outlined">
+                @TextData.Get("Khôi phục")
+              </a>
+            </td>
+          }
+        </tr>
+      }
+      @if (Model.Rows.Count < 1)
+      {
+        <tr>
+          <td colspan="8">
+            <div class="noresult">
+              <i class="s5em feather icon-alert-circle"></i>
+              <span>@TextData.Get("Không tìm thấy dữ liệu")</span>
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@Html.Raw(ViewBag.Pagination)

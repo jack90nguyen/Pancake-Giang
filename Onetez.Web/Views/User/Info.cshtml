@@ -1,0 +1,94 @@
+﻿@using Onetez.Web.Modules
+@using Onetez.Dal.EntityClasses;
+@model UsersEntity
+@{
+  ViewBag.SeoTitle = TextData.Get("Thông tin tài khoản");
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@section Javascript{
+
+}
+
+<div class="columns is-centered">
+  <div class="column is-narrow" style="width: var(--form-small)">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-header-title">
+          @ViewBag.SeoTitle
+        </span>
+      </div>
+      <div class="card-content">
+        @using (Html.BeginForm("Info", "User", FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+          @Html.Raw(ViewBag.Notification)
+
+          <div class="field">
+            <label class="label">@TextData.Get("Tên đăng nhập")</label>
+            <div class="control">
+              @Html.TextBoxFor(model => model.Username, new { @class = "input", @maxlength = "200", @readonly = "" })
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">@TextData.Get("Mật khẩu mới")</label>
+            <div class="control">
+              @Html.TextBoxFor(model => model.Password, new { @class = "input", @maxlength = "32", })
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Email</label>
+            <div class="control">
+              @Html.TextBoxFor(model => model.Email, new { @class = "input", @type = "email", @maxlength = "200" })
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">@TextData.Get("Họ và tên")</label>
+            <div class="control">
+              @Html.TextBoxFor(model => model.Name, new { @class = "input", @maxlength = "200" })
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">@TextData.Get("Hình đại diện")</label>
+            <div class="control">
+              <input type="file" name="file" class="input" accept="image/*" />
+            </div>
+          </div>
+
+          if (ViewBag.IsRoleAdmin)
+          {
+            <div class="field">
+              <label class="label">@TextData.Get("Quyền hạn")</label>
+              <div class="control">
+                <div class="select is-fullwidth">
+                  @Html.DropDownListFor(model => model.RoleId, (List<SelectListItem>)ViewBag.DdlRole)
+                </div>
+              </div>
+              <div class="control mt-3">
+                <label class="checkbox mr-3">
+                  @Html.CheckBoxFor(model => model.IsAds)
+                  @TextData.Get("Chi phí Ads")
+                </label>
+                <label class="checkbox">
+                  @Html.CheckBoxFor(model => model.IsReport)
+                  @TextData.Get("Xem thống kê")
+                </label>
+              </div>
+            </div>
+          }
+
+          <div class="field is-grouped">
+            <div class="control">
+              <button type="submit" name="save" class="button is-link">@TextData.Get("Cập nhật")</button>
+            </div>
+            <div class="control">
+              <a class="button" href="@Url.Action("Index","User")">@TextData.Get("Quay lại")</a>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

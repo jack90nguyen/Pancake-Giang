@@ -1,0 +1,149 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{6FFCD9AD-C726-48F3-AF97-C85B29513114}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Onetez.Dal</RootNamespace>
+    <AssemblyName>Onetez.Dal</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="SD.LLBLGen.Pro.DBDrivers.SqlServerDBDriver">
+      <HintPath>..\..\References\LLBLG\SD.LLBLGen.Pro.DBDrivers.SqlServerDBDriver.dll</HintPath>
+    </Reference>
+    <Reference Include="SD.LLBLGen.Pro.DQE.SqlServer.NET20">
+      <HintPath>..\..\References\LLBLG\SD.LLBLGen.Pro.DQE.SqlServer.NET20.dll</HintPath>
+    </Reference>
+    <Reference Include="SD.LLBLGen.Pro.LinqSupportClasses.NET35">
+      <HintPath>..\..\References\LLBLG\SD.LLBLGen.Pro.LinqSupportClasses.NET35.dll</HintPath>
+    </Reference>
+    <Reference Include="SD.LLBLGen.Pro.ORMSupportClasses.NET20">
+      <HintPath>..\..\References\LLBLG\SD.LLBLGen.Pro.ORMSupportClasses.NET20.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Generated\CollectionClasses\AdsCollection.cs" />
+    <Compile Include="Generated\CollectionClasses\ColorsCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Generated\CollectionClasses\ConfigsCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Generated\CollectionClasses\CustomersCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Generated\CollectionClasses\OrdersCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Generated\CollectionClasses\ProductsCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Generated\CollectionClasses\SheetsCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Generated\CollectionClasses\ShopsCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Generated\CollectionClasses\UsersCollection.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Generated\ConstantsEnums.cs" />
+    <Compile Include="Generated\DaoClasses\AdsDAO.cs" />
+    <Compile Include="Generated\DaoClasses\ColorsDAO.cs" />
+    <Compile Include="Generated\DaoClasses\ConfigsDAO.cs" />
+    <Compile Include="Generated\DaoClasses\CustomersDAO.cs" />
+    <Compile Include="Generated\DaoClasses\OrdersDAO.cs" />
+    <Compile Include="Generated\DaoClasses\ProductsDAO.cs" />
+    <Compile Include="Generated\DaoClasses\SheetsDAO.cs" />
+    <Compile Include="Generated\DaoClasses\ShopsDAO.cs" />
+    <Compile Include="Generated\DaoClasses\TypedListDAO.cs" />
+    <Compile Include="Generated\DaoClasses\UsersDAO.cs" />
+    <Compile Include="Generated\EntityClasses\AdsEntity.cs" />
+    <Compile Include="Generated\EntityClasses\ColorsEntity.cs" />
+    <Compile Include="Generated\EntityClasses\CommonEntityBase.cs" />
+    <Compile Include="Generated\EntityClasses\ConfigsEntity.cs" />
+    <Compile Include="Generated\EntityClasses\CustomersEntity.cs" />
+    <Compile Include="Generated\EntityClasses\OrdersEntity.cs" />
+    <Compile Include="Generated\EntityClasses\ProductsEntity.cs" />
+    <Compile Include="Generated\EntityClasses\SheetsEntity.cs" />
+    <Compile Include="Generated\EntityClasses\ShopsEntity.cs" />
+    <Compile Include="Generated\EntityClasses\UsersEntity.cs" />
+    <Compile Include="Generated\FactoryClasses\DaoFactory.cs" />
+    <Compile Include="Generated\FactoryClasses\EntityFactories.cs" />
+    <Compile Include="Generated\FactoryClasses\EntityFieldFactory.cs" />
+    <Compile Include="Generated\FactoryClasses\EntityFieldsFactory.cs" />
+    <Compile Include="Generated\HelperClasses\DbUtils.cs" />
+    <Compile Include="Generated\HelperClasses\DbUtilsComPlus.cs" />
+    <Compile Include="Generated\HelperClasses\FieldCreationClasses.cs" />
+    <Compile Include="Generated\HelperClasses\FieldInfoProvider.cs" />
+    <Compile Include="Generated\HelperClasses\InheritanceInfoProvider.cs" />
+    <Compile Include="Generated\HelperClasses\PersistenceInfoProvider.cs" />
+    <Compile Include="Generated\HelperClasses\ResultsetFields.cs" />
+    <Compile Include="Generated\HelperClasses\Transaction.cs" />
+    <Compile Include="Generated\HelperClasses\TransactionComPlus.cs" />
+    <Compile Include="Generated\HelperClasses\TypeDefaultValue.cs" />
+    <Compile Include="Generated\Linq\LinqMetaData.cs" />
+    <Compile Include="Generated\RelationClasses\AdsRelations.cs" />
+    <Compile Include="Generated\RelationClasses\ColorsRelations.cs" />
+    <Compile Include="Generated\RelationClasses\ConfigsRelations.cs" />
+    <Compile Include="Generated\RelationClasses\CustomersRelations.cs" />
+    <Compile Include="Generated\RelationClasses\DynamicRelation.cs" />
+    <Compile Include="Generated\RelationClasses\OrdersRelations.cs" />
+    <Compile Include="Generated\RelationClasses\ProductsRelations.cs" />
+    <Compile Include="Generated\RelationClasses\SheetsRelations.cs" />
+    <Compile Include="Generated\RelationClasses\ShopsRelations.cs" />
+    <Compile Include="Generated\RelationClasses\UsersRelations.cs" />
+    <Compile Include="Generated\StoredProcedureCallerClasses\ActionProcedures.cs" />
+    <Compile Include="Generated\StoredProcedureCallerClasses\RetrievalProcedures.cs" />
+    <Compile Include="Models\ImageModel.cs" />
+    <Compile Include="Models\OrderCreateResult.cs" />
+    <Compile Include="Models\OrderInfoModel.cs" />
+    <Compile Include="Models\OrderModel.cs" />
+    <Compile Include="Models\ProductConvert.cs" />
+    <Compile Include="Models\ProductsModel.cs" />
+    <Compile Include="Models\SheetModel.cs" />
+    <Compile Include="Models\ShopModel.cs" />
+    <Compile Include="Models\StaticModel.cs" />
+    <Compile Include="Models\TextModel.cs" />
+    <Compile Include="Models\UserModel.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Generated\TypedListClasses\" />
+    <Folder Include="Generated\TypedViewClasses\" />
+    <Folder Include="Generated\ValidatorClasses\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

@@ -1,0 +1,126 @@
+﻿@using System.Configuration;
+@using Onetez.Dal.EntityClasses;
+@using Onetez.Web.Modules;
+@model ConfigsEntity
+@{
+  ViewBag.SeoTitle = TextData.Get("Cấu hình hệ thống");
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  var shopList = (List<ShopsEntity>)ViewBag.ShopList;
+  var IsPancake = Convert.ToBoolean(ConfigurationManager.AppSettings["IsPancake"]);
+}
+@section Javascript{
+
+}
+
+<div class="columns is-centered">
+  <div class="column is-narrow" style="width: var(--form-medium);">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-header-title">
+          @ViewBag.SeoTitle
+        </span>
+      </div>
+      <div class="card-content">
+        <div class="columns">
+          <div class="column is-one-third">
+            <aside class="menu">
+              <div class="menu-label">
+                @TextData.Get("Hệ thống")
+              </div>
+              <ul class="menu-list">
+                <li>
+                  <a class="is-active" href="@Url.Action("Index","Config")">
+                    @TextData.Get("Cấu hình chung")
+                  </a>
+                </li>
+                <li>
+                  <a href="@Url.Action("Color","Config", new { @type = "keyword"})">
+                    @TextData.Get("Màu từ khóa")
+                  </a>
+                </li>
+                <li>
+                  <a href="@Url.Action("Color", "Config", new { @type = "ship"})">
+                    @TextData.Get("Ngày gửi hàng")
+                  </a>
+                </li>
+              </ul>
+              <div class="menu-label">
+                Shop
+              </div>
+              <ul class="menu-list">
+                @foreach (var item in shopList)
+                {
+                  <li>
+                    <a href="@Url.Action("Shop","Config", new { @id = item.Id })">
+                      @item.Name
+                    </a>
+                  </li>
+                }
+                <li>
+                  <a href="@Url.Action("Shop","Config", new { @id = "0" })">
+                    @TextData.Get("Thêm mới")
+                  </a>
+                </li>
+              </ul>
+            </aside>
+          </div>
+
+          <div class="column is-two-thirds">
+            @using (Html.BeginForm())
+            {
+              @Html.Raw(ViewBag.Notification)
+
+              <div class="field">
+                <label class="label">Google Service Account</label>
+                <div class="control">
+                  @Html.TextBoxFor(model => model.GoogleServiceAccount, new { @class = "input font-14", @maxlength = "50" })
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="label">Google Application Name</label>
+                <div class="control">
+                  @Html.TextBoxFor(model => model.GoogleApplicationName, new { @class = "input font-14", @maxlength = "50" })
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="label">Pancake APIUrl</label>
+                <div class="control">
+                  @Html.TextBoxFor(model => model.PancakeApiUrl, new { @class = "input font-14", @maxlength = "50" })
+                </div>
+              </div>
+
+              <div class="field is-hidden">
+                <div class="control">
+                  <label class="checkbox">
+                    @Html.CheckBoxFor(model => model.IsAuto)
+                    @TextData.Get("Tự động làm mới đơn Google Sheet")
+                  </label>
+                </div>
+              </div>
+
+              <div class="@(IsPancake ? "is-hidden" : "field")">
+                <label class="label">Sheet Category</label>
+                <div class="control">
+                  @Html.TextAreaFor(model => model.SheetCategory, new { @class = "textarea font-14", rows = 10 })
+                </div>
+              </div>
+
+              <hr />
+
+              <div class="field is-grouped">
+                <div class="control">
+                  <button type="submit" name="save" class="button is-link">@TextData.Get("Cập nhật")</button>
+                </div>
+                <div class="control">
+                  <a class="button is-link is-light" href="@Url.Action("Index","Config")">@TextData.Get("Quay lại")</a>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

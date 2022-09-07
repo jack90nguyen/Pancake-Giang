@@ -1,0 +1,27 @@
+﻿{
+    "short_name": "Tool Pancake",
+    "name": "Tool Pancake",
+    "description": "Tool Pancake - Quản lý đơn hàng",
+    "display": "standalone",
+    "orientation": "portrait",
+    "start_url": "/",
+    "theme_color": "#35d7f7",
+    "background_color": "#ffffff",
+    "icons": [
+        {
+            "src": "/favicon_512.png",
+            "sizes": "256x256",
+            "type": "image/png"
+        },
+        {
+            "src": "/favicon_256.png",
+            "sizes": "256x256",
+            "type": "image/png"
+        },
+        {
+            "src": "/favicon_128.png",
+            "sizes": "128x128",
+            "type": "image/png"
+        }
+    ]
+}

@@ -1,0 +1,23 @@
+
+# Xem data trong file sheet
+/apiv1/sheet/GetSheet?id=1713215
+
+# Xem tất cả đơn chưa tạo
+/apiv1/sheet/GetList
+
+/APIv1/Sheet/RefreshData
+
+# XÓA ĐƠN LỖI
+delete Orders where ShipCode = ''
+
+# XÓA ĐƠN THEO TỪ KHÓA
+delete Orders where ShipLogs LIKE N'%31357_Thơm%'
+
+# ẨN ĐƠN KHỎI HỆ THỐNG
+update Orders set Status = -1 where ...
+
+# XÓA FILE SHEET THÀNH CÔNG
+delete Sheets where OrderId != ''
+
+# XÓA FILE SHEET LỖI
+delete Sheets where StatusId = 2

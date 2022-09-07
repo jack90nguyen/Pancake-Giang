@@ -1,0 +1,71 @@
+﻿@using Onetez.Dal.EntityClasses;
+@model List<CustomersEntity>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.SeoTitle = "Danh sách khách hàng";
+}
+@section Javascript{
+    @Scripts.Render("~/bundles-customer-list/js")
+}
+
+<div class="level is-mobile">
+    <div class="level-left">
+        <div class="level-item">
+            <div>
+                <div class="title is-spaced">
+                    @ViewBag.SeoTitle
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="level-left">
+        <div class="level-item">
+            <a class="button is-small" href="@Url.Action("Edit", "Customer")">
+                <span class="icon">
+                    <i class="fa fa-plus"></i>
+                </span>
+                <span>Thêm mới</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="table-container">
+    <table class="table is-hoverable is-fullwidth font-14">
+        <thead>
+            <tr>
+                <th width="100px">ID</th>
+                <th>Khách hàng</th>
+                <th width="25%">Điện thoại</th>
+                <th width="25%">Email</th>
+                <th width="60px"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                string linkEdit = Url.Action("Edit", "Customer", new { @id = item.Id });
+
+                <tr id="row_@item.Id">
+                    <td>
+                        <span class="is-uppercase">@item.Id</span>
+                    </td>
+                    <td>
+                        <a href="@linkEdit">@item.Name</a>
+                    </td>
+                    <td>
+                        <span>@item.Phone</span>
+                    </td>
+                    <td>
+                        <span>@item.Email</span>
+                    </td>
+                    <td class="has-text-centered">
+                        <a class="icon has-text-danger" onclick="deleteItem('@item.Id')">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

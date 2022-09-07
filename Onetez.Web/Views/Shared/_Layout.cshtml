@@ -1,0 +1,61 @@
+﻿@using System.Configuration
+@using System.Web.Optimization
+@{
+    string domain = Request.Url.Scheme + "://" + Request.Url.Authority;
+    string shopName = ConfigurationManager.AppSettings["ShopName"];
+    string title = !string.IsNullOrEmpty(ViewBag.SeoTitle) ? ViewBag.SeoTitle + " | " + shopName : shopName;
+    string url = domain + Request.RawUrl;
+    string color = "#3273dc";
+}
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//En" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:og="http://ogp.me/ns#" lang="vi">
+<head>
+    <link rel="shortcut icon" href="@domain/favicon.ico" />
+    <link rel="icon" type="image/png" href="@domain/favicon.ico" />
+    <link rel="apple-touch-icon" href="@domain/favicon_ios.png" />
+    <link rel="canonical" href="@url" />
+    <title>@Html.Raw(title)</title>
+    <meta name="tilte" content="@Html.Raw(title)" />
+    <meta name="description" content="@Html.Raw(title)" />
+    <meta property="og:url" content="@url" />
+    <meta property="og:site_name" content="@domain" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="@Html.Raw(title)" />
+    <meta property="og:description" content="@Html.Raw(title)" />
+    <meta property="og:image" content="@domain/Images/cover.png" />
+    <meta http-equiv="refresh" content="600" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="@color" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+    <!-- mobile-web-app -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="@shopName" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="@shopName" />
+    <meta name="msapplication-TileImage" content="@domain/favicon.png" />
+    <meta name="msapplication-TileColor" content="@color" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <link rel="manifest" href="/manifest.json" />
+    @Styles.Render("~/bundles-app/css")
+</head>
+<body>
+    <div id="notify"></div>
+
+    <!--Header-->
+    @{Html.RenderAction("_Header", "Shared");}
+
+    <!--Content-->
+    <main>
+        <section>
+            @RenderBody()
+        </section>
+    </main>
+
+    <!--Javascript-->
+    @Scripts.Render("~/bundles-app/js")
+    @RenderSection("Javascript", required: false)
+
+</body>
+</html>

@@ -1,0 +1,449 @@
+﻿@using Newtonsoft.Json;
+@using Onetez.Core.DbContext;
+@using Onetez.Core.Libs;
+@using Onetez.Dal.EntityClasses;
+@using Onetez.Dal.Models;
+@model List<OrdersEntity>
+@{
+  ViewBag.SeoTitle = "Xử lý đơn hàng";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  var DateTimeNow = (DateTime)ViewBag.DateTimeNow;
+  var tab = Request.QueryString["tab"] != null ? Convert.ToInt32(Request.QueryString["tab"]) : 1;
+  int shop = (int)ViewBag.ShopId;
+  var statusList = DbOrder.Status();
+  var isPartner = (bool)ViewBag.IsPartner;
+  var colorKeyword = (List<ColorsEntity>)ViewBag.ColorKeyword;
+  var colorShip = (List<ColorsEntity>)ViewBag.ColorShip;
+}
+@section Javascript{
+  <script>
+    let color_list = [
+      @foreach (var item in colorKeyword)
+      {
+          @Html.Raw("{ 'name': '"+item.Name+ "', 'color': '" + item.Color + "' },");
+      }
+    ];
+  </script>
+  @Scripts.Render("~/bundles-order-list/js")
+}
+
+<div class="level is-mobile">
+  <div class="level-left">
+    <div class="level-item">
+      <div>
+        <div class="title is-spaced">
+          @ViewBag.SeoTitle
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="level-left">
+    <div class="level-item">
+      <a class="button is-small is-link is-outlined" href="@Url.Action("Crawl", "Order")">
+        <span class="icon">
+          <i class="feather icon-refresh-cw"></i>
+        </span>
+        <span>Làm mới</span>
+      </a>
+    </div>
+    <div class="level-item">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-static is-small">Shop</label>
+        </div>
+        <div class="control">
+          <div class="select is-small is-fullwidth ">
+            @Html.DropDownList("ddlShopId", (List<SelectListItem>)ViewBag.DdlShop, new { @class = "has-text-weight-bold", @onchange = "changeShop()" })
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs">
+  <ul>
+    <li class="@(tab == 1 ? "is-active" : "")">
+      <a href="@Url.Action("Index", "Order", new { tab = 1, shop = shop })">
+        Đơn đang xử lý
+        @if (tab == 1)
+        {
+          <span> (@Model.Count)</span>
+        }
+      </a>
+    </li>
+    <li class="@(tab == 2 ? "is-active" : "")">
+      <a href="@Url.Action("Index", "Order", new { tab = 2, shop = shop })">
+        Đơn đã xử lý
+      </a>
+    </li>
+    <li class="@(tab == 3 ? "is-active" : "")">
+      <a href="@Url.Action("Index", "Order", new { tab = 3, shop = shop })">
+        Đơn khiếu nại
+      </a>
+    </li>
+    <li class="@(tab == 4 ? "is-active" : "")">
+      <a href="@Url.Action("Index", "Order", new { tab = 4, shop = shop })">
+        Đơn chuyển hoàn
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Import", "Order")">
+        Nhân viên sale
+      </a>
+    </li>
+  </ul>
+</div>
+
+@Html.Raw(ViewBag.Notification)
+
+@using (Html.BeginForm())
+{
+  <nav class="level is_searchbar">
+    <div class="level-left">
+      <div class="level-item">
+        <div class="field">
+          <div class="control" style="width: 250px">
+            @Html.TextBox("FilterKeyword", (string)ViewBag.Keyword, new { @class = "input is-small", @placeholder = "Nhập mã vận đơn, sdt khách hàng" })
+          </div>
+        </div>
+      </div>
+      <div class="level-item">
+        <div class="field">
+          <div class="control">
+            <div class="select is-small">
+              @Html.DropDownList("FilterPartner", (List<SelectListItem>)ViewBag.DdlPartner)
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="@(tab != 4 ? "level-item" : "is-hidden")">
+        <div class="field">
+          <div class="control">
+            <div class="select is-small">
+              @Html.DropDownList("FilterSale", (List<SelectListItem>)ViewBag.DdlSale)
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="@(tab == 4 ? "level-item" : "is-hidden")">
+        <div class="field">
+          <div class="control">
+            <div class="select is-small">
+              @Html.DropDownList("FilterOther", (List<SelectListItem>)ViewBag.DdlOther)
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="@(tab == 1 ? "level-item" : "is-hidden")">
+        <div class="field">
+          <div class="control">
+            <div class="select is-small">
+              @Html.DropDownList("FilterSort", (List<SelectListItem>)ViewBag.DdlSort)
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="level-item">
+        <button id="filterSubmit" type="submit" class="button is-info is-small">
+          <span class="icon">
+            <i class="feather icon-search"></i>
+          </span>
+          <span>Tìm kiếm</span>
+        </button>
+        @Html.Hidden("FilterTab", tab)
+      </div>
+    </div>
+    <div class="level-right is-hidden-mobile">
+      @if (tab == 2)
+      {
+        <div class="level-item">
+          <a id="copy_btn" class="button is-small is-danger" onclick="xoaDonThanhCong()">
+            <span class="icon">
+              <i class="feather icon-trash-2"></i>
+            </span>
+            <span>XÓA ĐƠN THÀNH CÔNG</span>
+          </a>
+        </div>
+      }
+      <div class="level-item">
+        <a id="copy_btn" class="button is-small is-primary js_copy" data-clipboard-target="#copy_data">
+          <span class="icon">
+            <i class="feather icon-copy"></i>
+          </span>
+          <span>COPY MVĐ</span>
+        </a>
+        <input id="copy_data" type="text" class="js_copy_target" />
+      </div>
+    </div>
+  </nav>
+  <div></div>
+}
+
+<table id="list_order" class="table is-bordered is-fullwidth is-size-7">
+  <thead>
+    <tr class="is-size-7">
+      <th width="40px" class="is-hidden-mobile">
+        <input type="checkbox" class="js_cb_all" onchange="selectOrder()" data-group="order">
+      </th>
+      <th width="100px">MVĐ</th>
+      <th width="110px">Người nhận</th>
+      <th width="120px">Sản phẩm</th>
+      <th width="94px">Lưu kho</th>
+      <th>Shipper xử lý</th>
+      <th>Shop Xử lý</th>
+      <th width="120px">Trạng thái</th>
+      <th>Khiến nại</th>
+      <th width="110px">Tình trạng</th>
+      <th width="100px">Nhân viên</th>
+      @if (ViewBag.IsAdmin)
+      {
+        <th width="34px"></th>
+      }
+    </tr>
+  </thead>
+  <tbody>
+    @foreach (var item in Model)
+    {
+      var shipLogs = JsonConvert.DeserializeObject<List<Extend_Update>>(item.ShipLogs);
+      var shopLogs = JsonConvert.DeserializeObject<List<ShopLogs>>(item.ShopLogs);
+      var status = DbOrder.Status(item.Status);
+      var inStock = item.ShipInStock < DateTime.Now ?
+          ConvertString.ConvertDate(null, item.ShipInStock).Replace("trước", "") : "";
+
+      <tr id="row_@item.Id" data-update="@item.LastUpdate" data-order="@item.OrderId">
+        <td class="is-hidden-mobile">
+          <input type="checkbox" class="js_cb_list" onchange="selectOrder()" data-id="@item.ShipCode" data-group="order">
+        </td>
+        <td>
+          <span class="js_copy has-text-link is-block-tablet" style="width: 100px; word-break: break-all;" data-clipboard-text="@item.ShipCode">@item.ShipCode</span>
+        </td>
+        <td>
+          <span>@item.BillName</span>
+          <br />
+          <span class="js_copy has-text-link" data-clipboard-text="@item.BillPhone">@item.BillPhone</span>
+        </td>
+        <td>
+          <span>@item.Product</span>
+        </td>
+        <td>
+          @if (item.ShipInStock < DateTimeNow)
+          {
+            var spanMe = DateTimeNow.Subtract(item.ShipInStock);
+            if (spanMe.Days >= 1)
+            {
+              <div class="tag text_1line" title="Ngày lưu kho: @string.Format("{0:dd/MM/yyyy HH:mm}", item.ShipInStock)">
+                <span id="in_stock_@item.Id">
+                  Kho: @spanMe.Days ngày
+                </span>
+              </div>
+            }
+          }
+          <div style="height: 5px;"></div>
+          @if (shipLogs != null && shipLogs.Count > 0)
+          {
+            var shipStart = shipLogs.LastOrDefault().updated_at.Value;
+            var spanMe = DateTimeNow.Subtract(shipStart);
+            string tagColor = "";
+            if (spanMe.Days >= 1)
+            {
+              foreach (var color in colorShip)
+              {
+                if (spanMe.Days >= Convert.ToInt32(color.Name))
+                {
+                  tagColor = color.Color;
+                }
+              }
+
+              <div class="tag @tagColor text_1line" title="Ngày gửi hàng: @string.Format("{0:dd/MM/yyyy HH:mm}", shipStart)">
+                <span>Gửi: @spanMe.Days ngày</span>
+              </div>
+            }
+          }
+        </td>
+        <td>
+          @if (isPartner)
+          {
+            <div id="ship_log_@item.Id" class="ship_log log_input" contentEditable="true"
+                 onclick="document.execCommand('selectAll',false,null)"></div>
+          }
+          <div id="ship_logs_@item.Id" class="logs_list">
+            @if (shipLogs != null)
+            {
+              for (int i = 0; i < shipLogs.Count; i++)
+              {
+                var log = shipLogs[i];
+                var date = log.updated_at.Value;
+                bool isToday = string.Format("{0:dd/MM/yy}", DateTime.Now) == string.Format("{0:dd/MM/yy}", date);
+                string tagColor = "";
+                if (isToday)
+                {
+                  tagColor = "is-info";
+                }
+                if (log.status_code == "000")
+                {
+                  if (isToday)
+                  {
+                    tagColor = "is-link";
+                  }
+                  else
+                  {
+                    tagColor = "is-link is-light";
+                  }
+                }
+
+                string logNote = !string.IsNullOrEmpty(log.note) ? log.note.ToLower() : "";
+                foreach (var color in colorKeyword)
+                {
+                  if (logNote.Contains(color.Name))
+                  {
+                    tagColor = color.Color;
+                  }
+                }
+
+                <div class="item tag @tagColor" title="@string.Format("{0:dd/MM/yyyy HH:mm}", date) @log.status">
+                  <span class="is_date">@string.Format("{0:dd/MM}", date)</span>
+                  <span>@log.note</span>
+                </div>
+              }
+              if (shipLogs.Count > 2)
+              {
+                <a class="toggler">Xem tất cả (@shipLogs.Count)</a>
+              }
+            }
+          </div>
+        </td>
+        <td>
+          @if (!isPartner)
+          {
+            <div id="shop_log_@item.Id" class="shop_log log_input" contentEditable="true"
+                 onclick="document.execCommand('selectAll',false,null)"></div>
+          }
+          <div id="shop_logs_@item.Id" class="logs_list is_shop">
+            @if (shopLogs != null)
+            {
+              for (int i = 0; i < shopLogs.Count; i++)
+              {
+                var log = shopLogs[i];
+                bool isToday = string.Format("{0:dd/MM/yy}", DateTime.Now) == string.Format("{0:dd/MM/yy}", log.date);
+                string tagColor = "";
+                var session = "";
+
+                if (0 < log.date.Hour && log.date.Hour <= 12)
+                {
+                  session = "Sáng";
+                }
+                else if (12 < log.date.Hour && log.date.Hour <= 17)
+                {
+                  session = "Chiều";
+                }
+                else
+                {
+                  session = "Tối";
+                }
+
+                var sessionNow = "";
+                if (0 < DateTimeNow.Hour && DateTimeNow.Hour <= 12)
+                {
+                  sessionNow = "Sáng";
+                }
+                else if (12 < DateTimeNow.Hour && DateTimeNow.Hour <= 17)
+                {
+                  sessionNow = "Chiều";
+                }
+                else
+                {
+                  sessionNow = "Tối";
+                }
+
+                if (isToday)
+                {
+                  tagColor = session == sessionNow ? "is-link" : "is-info";
+                }
+
+                <div class="item tag @tagColor" title="Nhân viên: @log.user">
+                  <span class="is_date">@string.Format("{0} {1:dd/MM}", session, log.date)</span>
+                  <span>@log.note</span>
+                </div>
+              }
+              if (shopLogs.Count > 4)
+              {
+                <a class="toggler">Xem tất cả (@shopLogs.Count)</a>
+              }
+            }
+          </div>
+        </td>
+        <td>
+          <div class="select is-small @status.color">
+            @if (isPartner)
+            {
+              if (item.Status == 1)
+              {
+                <select id="status_@item.Id" onchange="changeStauts(@item.Id)">
+                  @foreach (var sl in statusList)
+                  {
+                    if (sl.id == 1)
+                    {
+                      <option value="@sl.id" @(sl.id == item.Status ? "selected" : "")>@sl.name</option>
+                    }
+                    else if (sl.id == 3)
+                    {
+                      <option value="@sl.id" @(sl.id == item.Status ? "selected" : "")>J&T đã xử lý</option>
+                    }
+                  }
+                </select>
+              }
+              else
+              {
+                <select id="status_@item.Id" disabled>
+                  @foreach (var sl in statusList)
+                  {
+                    <option value="@sl.id" @(sl.id == item.Status ? "selected" : "")>@sl.name</option>
+                  }
+                </select>
+              }
+            }
+            else
+            {
+              <select id="status_@item.Id" onchange="changeStauts(@item.Id)">
+                @foreach (var sl in statusList)
+                {
+                  <option value="@sl.id" @(sl.id == item.Status ? "selected" : "")>@sl.name</option>
+                }
+              </select>
+            }
+          </div>
+        </td>
+        <td>
+          @if (isPartner)
+          {
+            <div id="complain_@item.Id">
+              @item.Complain
+            </div>
+          }
+          else
+          {
+            <div id="complain_@item.Id" class="complain log_input" contentEditable="true"
+                 onclick="document.execCommand('selectAll',false,null)">
+              @(string.IsNullOrEmpty(item.Complain) ? "" : item.Complain)
+            </div>
+          }
+        </td>
+        <td>
+          <span>@item.ShipStatus</span>
+        </td>
+        <td>
+          <div class="text_1line">@item.ShipPhone</div>
+        </td>
+        @if (ViewBag.IsAdmin)
+        {
+          <td>
+            <a class="delete is-small" onclick="deleteItem(@item.Id)" title="Xóa"></a>
+          </td>
+        }
+      </tr>
+    }
+  </tbody>
+</table>
+<!--Pagination-->
+@Html.Raw(ViewBag.Pagination)

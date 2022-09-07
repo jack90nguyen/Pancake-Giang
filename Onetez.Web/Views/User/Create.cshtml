@@ -1,0 +1,97 @@
+﻿@using Onetez.Dal.EntityClasses;
+@using Onetez.Web.Modules
+@model UsersEntity
+@{
+  ViewBag.SeoTitle = TextData.Get("Tạo tài khoản");
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@section Javascript{
+
+}
+
+<div class="columns is-centered">
+  <div class="column is-narrow" style="width: var(--form-small)">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-header-title">
+          @TextData.Get("Tạo tài khoản")
+        </span>
+      </div>
+      <div class="card-content">
+        @using (Html.BeginForm("Create", "User", FormMethod.Post, new { enctype = "multipart/form-data" }))
+        {
+          @Html.Raw(ViewBag.Notification)
+
+          <div class="field">
+            <label class="label">@TextData.Get("Tên đăng nhập")</label>
+            <div class="control has-icons-right">
+              @Html.TextBoxFor(model => model.Username, new { @class = "input", @maxlength = "200", @placeholder = "Bắt buộc nhập" })
+              <span class="icon is-small is-right">
+                <i class="fas fa-asterisk"></i>
+              </span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">@TextData.Get("Mật khẩu")</label>
+            <div class="control has-icons-right">
+              @Html.TextBoxFor(model => model.Password, new { @class = "input", @type = "password", @maxlength = "32", })
+              <span class="icon is-small is-right">
+                <i class="fas fa-asterisk"></i>
+              </span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Email</label>
+            <div class="control">
+              @Html.TextBoxFor(model => model.Email, new { @class = "input", @type = "email", @maxlength = "200" })
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">@TextData.Get("Họ và tên")</label>
+            <div class="control">
+              @Html.TextBoxFor(model => model.Name, new { @class = "input", @maxlength = "200" })
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">@TextData.Get("Hình đại diện")</label>
+            <div class="control">
+              <input type="file" name="file" class="input" accept="image/*" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">@TextData.Get("Quyền hạn")</label>
+            <div class="control">
+              <div class="select is-fullwidth">
+                @Html.DropDownListFor(model => model.RoleId, (List<SelectListItem>)ViewBag.DdlRole)
+              </div>
+            </div>
+            <div class="control mt-3">
+              <label class="checkbox mr-3">
+                @Html.CheckBoxFor(model => model.IsAds)
+                @TextData.Get("Chi phí Ads")
+              </label>
+              <label class="checkbox">
+                @Html.CheckBoxFor(model => model.IsReport)
+                @TextData.Get("Xem thống kê")
+              </label>
+            </div>
+          </div>
+
+          <div class="field is-grouped">
+            <div class="control">
+              <button type="submit" name="save" class="button is-link">@TextData.Get("Cập nhật")</button>
+            </div>
+            <div class="control">
+              <a class="button" href="@Url.Action("Index","User")">@TextData.Get("Quay lại")</a>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

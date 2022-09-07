@@ -1,0 +1,373 @@
+﻿@using System.Configuration;
+@using Onetez.Core.DbContext;
+@using Onetez.Web.Modules;
+@using Onetez.Dal.EntityClasses;
+@{
+  ViewBag.SeoTitle = "Sheet: " + TextData.Get("Đơn đang xử lý");
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  var IsPancake = Convert.ToBoolean(ConfigurationManager.AppSettings["IsPancake"]);
+  var IsReport = Convert.ToBoolean(ConfigurationManager.AppSettings["IsReport"]);
+  var IsSimple = Convert.ToBoolean(ConfigurationManager.AppSettings["IsSimple"]);
+  int tab = (int)ViewBag.TabId;
+  int shop = (int)ViewBag.ShopId;
+  var Config = (ConfigsEntity)ViewBag.ConfigInfo;
+  var listOrder = (List<SheetsEntity>)ViewBag.ListOrder;
+  var listUser = (List<UsersEntity>)ViewBag.ListUser;
+  var listProcess = DbSheet.Process();
+  var listProduct = DbProduct.GetListName(shop);
+}
+@section Javascript{
+  @Scripts.Render("~/bundles-sheet-list/js")
+}
+
+<div class="level">
+  <div class="level-left">
+    <div class="level-item">
+      <div>
+        <div class="title is-5 is-spaced is-uppercase">
+          @ViewBag.SeoTitle
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="level-right">
+    <div class="level-item">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-static is-small">Shop</label>
+        </div>
+        <div class="control">
+          <div class="select is-small is-fullwidth">
+            @Html.DropDownList("ddlShopId", (List<SelectListItem>)ViewBag.DdlShop,
+              new { @class = "has-text-weight-bold", @onchange = "changeShop()" })
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs is-boxed">
+  <ul>
+    <li>
+      <a href="@Url.Action("News", "Sheet", new { shop = shop })">
+        @TextData.Get("Đơn chưa xử lý")
+      </a>
+    </li>
+    <li class="is-active">
+      <a href="@Url.Action("Process", "Sheet", new { shop = shop })">
+        @TextData.Get("Đơn đang xử lý")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Index", "Sheet", new { tab = 2, shop = shop })">
+        @TextData.Get("Đơn đã tạo")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Index", "Sheet", new { tab = 3, shop = shop })">
+        @TextData.Get("Đơn tạo lỗi")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Index", "Sheet", new { tab = 4, shop = shop })">
+        @TextData.Get("Đơn hủy")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Product", "Sheet", new { shop = shop })">
+        @TextData.Get("Sản phẩm")
+      </a>
+    </li>
+    @if (IsReport)
+    {
+      <li>
+        <a href="@Url.Action("Ads", "Ads", new { shop = shop })">
+          @TextData.Get("Chi phí Ads")
+        </a>
+      </li>
+      <li>
+        <a href="@Url.Action("Report", "Sheet", new { shop = shop })">
+          @TextData.Get("Thống kê")
+        </a>
+      </li>
+    }
+  </ul>
+</div>
+
+@using (Html.BeginForm())
+{
+  <ul class="columns is-multiline is-variable is-1" style="margin-bottom: 1rem;">
+    <li class="column is-narrow" style="width: 220px;">
+      @Html.TextBox("product", (string)ViewBag.Product,
+        new { @class = "input is-small", placeholder = TextData.Get("Sản phẩm"), list = "products", @autocomplete = "off" })
+      <datalist id="products">
+        <option value="@TextData.Get("Sản phẩm không xác định")" />
+        @foreach (var item in listProduct)
+        {
+          <option value="@item" />
+        }
+      </datalist>
+    </li>
+    <li class="column is-narrow" style="width: 120px;">
+      @Html.TextBox("phone", (string)ViewBag.Phone, new { @class = "input is-small", placeholder = TextData.Get("Điện thoại") })
+    </li>
+    <li class="column is-narrow" style="width: 160px;">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-small is-static">@TextData.Get("Trạng thái")</label>
+        </div>
+        <div class="control is-expanded">
+          <div class="select is-small is-fullwidth">
+            @Html.DropDownList("processId", (List<SelectListItem>)ViewBag.DdlProcess)
+          </div>
+        </div>
+      </div>
+    </li>
+    <li class="column is-narrow" style="width: 160px;">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-small is-static">@TextData.Get("Tình trạng")</label>
+        </div>
+        <div class="control is-expanded">
+          <div class="select is-small is-fullwidth">
+            @Html.DropDownList("statusId", (List<SelectListItem>)ViewBag.DdlStatus)
+          </div>
+        </div>
+      </div>
+    </li>
+    <li class="column is-narrow" style="width: 160px;">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-small is-static">@TextData.Get("Nhân viên")</label>
+        </div>
+        <div class="control is-expanded">
+          <div class="select is-small is-fullwidth">
+            @Html.DropDownList("userId", (List<SelectListItem>)ViewBag.DdlUser)
+          </div>
+        </div>
+      </div>
+    </li>
+    <li class="column is-narrow">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-small is-static">@TextData.Get("Từ ngày")</label>
+        </div>
+        <div class="control is-expanded" style="width: 130px;">
+          @Html.TextBox("start", (string)ViewBag.DateStart, new { @class = "input is-small", type = "date" })
+        </div>
+      </div>
+    </li>
+    <li class="column is-narrow">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-small is-static">@TextData.Get("Đến ngày")</label>
+        </div>
+        <div class="control is-expanded" style="width: 130px;">
+          @Html.TextBox("end", (string)ViewBag.DateEnd, new { @class = "input is-small", type = "date" })
+        </div>
+      </div>
+    </li>
+    <li class="column is-narrow">
+      <button id="filterSubmit" type="submit" class="button is-info is-small">
+        <span class="icon">
+          <i class="feather icon-search"></i>
+        </span>
+        <span>@TextData.Get("Tìm kiếm")</span>
+      </button>
+      @Html.Hidden("shopId", shop)
+    </li>
+  </ul>
+}
+
+<div class="table_stick">
+  <table id="list_sheet" class="table is-hoverable is-vcentered is-size-7">
+    <thead>
+      <tr>
+        <th width="120px" class="is_sticky" style="left: 1px;">@TextData.Get("Khách hàng")</th>
+        <th width="100px" class="is_sticky is_last" style="left: 121px;">@TextData.Get("Điện thoại")</th>
+        <th width="600px">
+          <span class="is-inline-block mr-5 pr-3">State</span>
+          <span class="is-inline-block mr-3">City/District</span>
+          <span class="is-inline-block mr-3">Locality/Landmark</span>
+          <span class="is-inline-block">Address</span>
+          <span class="is-inline-block mr-6 is-pulled-right">Pin Code</span>
+        </th>
+        <th width="250px">@TextData.Get("Sản phẩm")</th>
+        <th width="110px">@TextData.Get("Ngày chia")</th>
+        <th width="120px">@TextData.Get("Nhân viên")</th>
+        @if (IsReport)
+        {
+          <th width="80px">@TextData.Get("Doanh thu")</th>
+        }
+        <th width="200px">@TextData.Get("Ghi chú")</th>
+        <th width="130px">@TextData.Get("Trạng thái")</th>
+        <th width="100px" align="center">@TextData.Get("Xử lý")</th>
+      </tr>
+    </thead>
+    <tbody>
+      @foreach (var item in listOrder)
+      {
+        var user = listUser.SingleOrDefault(x => x.UserId == item.UserId);
+        var process = DbSheet.Process(item.ProcessId);
+        var product = Url.Action("Process", "Sheet",
+          new
+          {
+            shop = item.ShopId,
+            product = (string.IsNullOrEmpty(item.ProcessProduct) ? "0" : item.ProcessProduct.Replace(" ", "-"))
+          });
+        var address = SheetApi.ConvertAddress(item.Location);
+
+        <tr id="row_@item.Id">
+          <td class="is_sticky" style="left: 1px;">
+            <div class="text_1line" style="width: 109px;">@item.Name</div>
+          </td>
+          <td class="is_sticky is_last" style="left: 121px;">
+            <div class="js_copy has-text-link has-text-weight-semibold" data-clipboard-text="@item.Phone">@item.Phone</div>
+            <div id="msg_@item.Id" class="is-family-code has-text-danger">
+              @item.Error
+            </div>
+          </td>
+          <td>
+            <div class="field has-addons" data-location>
+              <div class="control">
+                <input id="state_@item.Id" class="input is-small" type="text" value="@address.state" placeholder="State..." style="width: 70px;" />
+              </div>
+              <div class="control">
+                <input id="city_@item.Id" class="input is-small" type="text" value="@address.city" placeholder="City/District..." style="width: 80px;" />
+              </div>
+              <div class="control">
+                <input id="locality_@item.Id" class="input is-small" type="text" value="@address.locality" placeholder="Locality/Landmark..." style="width: 90px;" />
+              </div>
+              <div class="control is-expanded">
+                <input id="address_@item.Id" class="input is-small" type="text" value="@address.address" placeholder="Address..." />
+              </div>
+              <div class="control">
+                <input id="pin_@item.Id" class="input is-small" type="text" value="@address.pin" placeholder="Pin code.." style="width: 65px;" />
+              </div>
+              <div class="control">
+                <a class="button has-text-link is-small" onclick="changeLocation('@item.Id')">
+                  <span class="icon">
+                    <i class="feather icon-save"></i>
+                  </span>
+                </a>
+              </div>
+            </div>
+          </td>
+          <td>
+            <a class="has-text-weight-medium" href="@product">@item.Product</a>
+            @if (!string.IsNullOrEmpty(item.ProcessCode))
+            {
+              <span> - Code: @item.ProcessCode</span>
+            }
+            @if (!string.IsNullOrEmpty(item.Size) && item.Size != item.ProductOther.Trim().ToLower())
+            {
+              <span title="Size">(@item.Size)</span>
+            }
+            @if (!string.IsNullOrEmpty(item.Color) && item.Color != item.ProductOther.Trim().ToLower())
+            {
+              <span title="Color">(@item.Color)</span>
+            }
+            @if (!string.IsNullOrEmpty(item.ProductOther))
+            {
+              <span title="Upsale">(@item.ProductOther)</span>
+            }
+            @if (!string.IsNullOrEmpty(item.Note))
+            {
+              <div class="is-italic">@item.Note</div>
+            }
+          </td>
+          <td>
+            <span>@string.Format("{0:dd/MM, HH:mm:ss}", item.ProcessDate)</span>
+          </td>
+          <td>
+            <span class="text_1line" style="width: 110px;">@(user != null ? user.Name : item.UserId)</span>
+          </td>
+          @if (IsReport)
+          {
+            <td>
+              <input class="input is-small has-text-weight-semibold" type="number" id="revenue_@item.Id" data-revenue
+                     title="@TextData.Get("Nhấn Enter để lưu")" value="@item.Revenue" />
+            </td>
+          }
+          <td>
+            <div id="note_@item.Id" class="input is-small" contentEditable="true"
+                 title="@TextData.Get("Nhấn Enter để lưu")">
+              @Html.Raw(item.ProcessNote)
+            </div>
+          </td>
+          <td>
+            <div class="field has-addons">
+              <div class="control">
+                <div class="dropdown">
+                  <div class="dropdown-trigger">
+                    <a class="button is-small" title="@TextData.Get("Xem lịch sử")">
+                      <span class="icon">
+                        <i class="feather icon-info"></i>
+                      </span>
+                    </a>
+                  </div>
+                  <div class="dropdown-menu">
+                    <div id="logs_@item.Id" class="dropdown-content p-0" style="width: 260px;">
+                      @if (!string.IsNullOrEmpty(item.ProcessLog))
+                      {
+                        <div class="dropdown-item is-size-7 px-2">
+                          @Html.Raw(item.ProcessLog)
+                        </div>
+                      }
+                      else
+                      {
+                        <div class="dropdown-item is-size-7 px-2 is-italic">
+                          @TextData.Get("Chưa có lịch sử xử lý")
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="control is-expanded">
+                <div class="select is-small is-fullwidth">
+                  <select id="process_@item.Id" onchange="changeProcess('@item.Id')">
+                    @foreach (var sl in listProcess)
+                    {
+                      <option value="@sl.id" @(sl.id == item.ProcessId ? "selected" : "")>@sl.name</option>
+                    }
+                  </select>
+                </div>
+              </div>
+            </div>
+          </td>
+          <td align="center" data-status>
+            <a id="delete_@item.Id" onclick="deleteItem('@item.Id')"
+               class="button is-small has-text-danger is-fullwidth @(item.ProcessId == 3 || item.ProcessId == 4 || item.ProcessId > 20 ? "" : "is-hidden")">
+              <span class="icon">
+                <i class="feather icon-x"></i>
+              </span>
+              <span>@TextData.Get("Hủy đơn")</span>
+            </a>
+            <a id="status_@item.Id" onclick="createOrder('@item.Id')"
+               class="button is-small is-success is-fullwidth @(item.ProcessId == 2 ? "" : "is-hidden")">
+              <span class="icon">
+                <i class="feather icon-arrow-up-circle"></i>
+              </span>
+              <span>@TextData.Get("Lên đơn")</span>
+            </a>
+          </td>
+        </tr>
+      }
+      @if (listOrder.Count < 1)
+      {
+        <tr>
+          <td colspan="8">
+            <div class="noresult">
+              <i class="s5em feather icon-alert-circle"></i>
+              <span>@TextData.Get("Không tìm thấy dữ liệu")</span>
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@Html.Raw(ViewBag.Pagination)

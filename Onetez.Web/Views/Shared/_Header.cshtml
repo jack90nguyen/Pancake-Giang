@@ -1,0 +1,159 @@
+﻿@using System.Configuration;
+@using Onetez.Web.Modules;
+@using Onetez.Dal.Models;
+@{
+  var IsReport = Convert.ToBoolean(ConfigurationManager.AppSettings["IsReport"]);
+  var IsSimple = Convert.ToBoolean(ConfigurationManager.AppSettings["IsSimple"]);
+  var UrlLocal = Request.Url.LocalPath.ToLower();
+  var UserInfo = (UserModel)ViewBag.UserInfo;
+  var ModuleOrder = Convert.ToBoolean(ConfigurationManager.AppSettings["ModuleOrder"]);
+  var Language = Request.Cookies["_language"];
+}
+
+@if (UserInfo != null)
+{
+  <header>
+    <nav class="navbar is-link">
+      <div class="navbar-brand">
+        <a class="navbar-item logo" href="/">
+          <img src="~/Images/logo.png" height="28" alt="logo">
+          <span>PANCAKE TOOL</span>
+        </a>
+
+        <a role="button" class="navbar-burger burger">
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </a>
+      </div>
+
+      <div id="navHeader" class="navbar-menu">
+        <div class="navbar-start">
+          <div class="navbar-item has-dropdown is-hoverable">
+            <a class="navbar-link">
+              <span class="icon">
+                <i class="s20 feather icon-file-text"></i>
+              </span>
+              <span>GOOGLE SHEET</span>
+            </a>
+            <div class="navbar-dropdown">
+              <a class="navbar-item" href="@Url.Action("News", "Sheet")">
+                @TextData.Get("Đơn chưa xử lý")
+              </a>
+              @if (!IsSimple)
+              {
+                <a class="navbar-item" href="@Url.Action("Process", "Sheet")">
+                  @TextData.Get("Đơn đang xử lý")
+                </a>
+              }
+              <a class="navbar-item" href="@Url.Action("Index", "Sheet", new { tab = 2 })">
+                @TextData.Get("Đơn đã tạo")
+              </a>
+              <a class="navbar-item" href="@Url.Action("Index", "Sheet", new { tab = 3 })">
+                @TextData.Get("Đơn tạo lỗi")
+              </a>
+              <a class="navbar-item" href="@Url.Action("Index", "Sheet", new { tab = 4 })">
+                @TextData.Get("Đơn hủy")
+              </a>
+              <a class="navbar-item" href="@Url.Action("Product", "Sheet")">
+                @TextData.Get("Sản phẩm")
+              </a>
+              @if (IsReport)
+              {
+                <a class="navbar-item" href="@Url.Action("Ads", "Ads")">
+                  @TextData.Get("Chi phí Ads")
+                </a>
+                <a class="navbar-item" href="@Url.Action("Report", "Sheet")">
+                  @TextData.Get("Thống kê")
+                </a>
+              }
+            </div>
+          </div>
+          @if (ModuleOrder)
+          {
+            <div class="navbar-item has-dropdown is-hoverable">
+              <a class="navbar-link">
+                <span class="icon">
+                  <i class="s20 feather icon-zap"></i>
+                </span>
+                <span>@TextData.Get("XỬ LÝ ĐƠN HÀNG")</span>
+              </a>
+              <div class="navbar-dropdown">
+                <a class="navbar-item" href="@Url.Action("Index", "Order", new { tab = 1 })">
+                  @TextData.Get("Đơn đang xử lý")
+                </a>
+                <a class="navbar-item" href="@Url.Action("Index", "Order", new { tab = 2 })">
+                  @TextData.Get("Đơn đã xử lý")
+                </a>
+                <a class="navbar-item" href="@Url.Action("Index", "Order", new { tab = 3 })">
+                  @TextData.Get("Đơn khiếu nại")
+                </a>
+                <a class="navbar-item" href="@Url.Action("Index", "Order", new { tab = 4 })">
+                  @TextData.Get("Đơn chuyển hoàn")
+                </a>
+                <a class="navbar-item" href="@Url.Action("Import", "Order")">
+                  @TextData.Get("Nhân viên sale")
+                </a>
+                <a class="navbar-item" href="@Url.Action("Crawl", "Order")">
+                  @TextData.Get("Làm mới dữ liệu")
+                </a>
+              </div>
+            </div>
+          }
+          <a class="navbar-item" href="@Url.Action("Index", "User")">
+            <span class="icon">
+              <i class="s20 feather icon-users"></i>
+            </span>
+            <span>@TextData.Get("NHÂN SỰ")</span>
+          </a>
+          <a class="navbar-item" href="@Url.Action("Index", "Config")">
+            <span class="icon">
+              <i class="s20 feather icon-settings"></i>
+            </span>
+            <span>@TextData.Get("CẤU HÌNH")</span>
+          </a>
+        </div>
+
+        <div class="navbar-end">
+          <a class="navbar-item" title="Đơn xử lý lỗi"
+             href="@Url.Action("Index", "Sheet", new { @tab = 3 })">
+            <span id="count_order_2" class="tag is-small is-danger">0</span>
+          </a>
+          <div class="navbar-item has-dropdown is-hoverable">
+            <a class="navbar-link is-uppercase">
+              @if (Language != null)
+              {
+                <span>@Language.Value</span>
+              }
+              else
+              {
+                <span>VI</span>
+              }
+            </a>
+            <div class="navbar-dropdown">
+              <a class="navbar-item" href="@Url.Action("Language","Home", new { lang = "vi" })">
+                Vietnamese
+              </a>
+              <a class="navbar-item" href="@Url.Action("Language","Home", new { lang = "en" })">
+                English
+              </a>
+            </div>
+          </div>
+          <div class="navbar-item has-dropdown is-hoverable">
+            <a class="navbar-link" href="@Url.Action("Info", "User", new { @id = UserInfo.id })">
+              <div class="avatar-round">
+                <span class="is-avatar" style="background-image: url('@UserInfo.avatar');"></span>
+                <span class="is-text">@UserInfo.user</span>
+              </div>
+            </a>
+            <div class="navbar-dropdown is-right">
+              <a class="navbar-item" href="@Url.Action("Logout","Home")">
+                @TextData.Get("Đăng Xuất")
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+}

@@ -1,0 +1,432 @@
+﻿@using System.Configuration;
+@using Onetez.Core.Libs;
+@using Onetez.Core.DbContext;
+@using Onetez.Web.Modules;
+@using Onetez.Dal.EntityClasses;
+@model List<SheetsEntity>
+@{
+  ViewBag.SeoTitle = "Sheet: " + TextData.Get("Thống kê");
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  var currency = ConfigurationManager.AppSettings["Currency"];
+  int shop = (int)ViewBag.ShopId;
+  var product = (string)ViewBag.Product;
+  var adsList = (List<AdsEntity>)ViewBag.AdsList;
+  var users = DbUser.GetListStaff();
+  var products = DbProduct.GetListName(shop);
+  var link = Url.Action("Report", "Sheet", new { shop = shop, product = product.Replace(" ", "-") });
+  var month = Convert.ToDateTime(DateTime.Now.ToString("yyyy-MM-01"));
+  var monday = Shared.GetMonday(DateTime.Now);
+  var week = link + string.Format("&start={0:yyyy-MM-dd}&end={1:yyyy-MM-dd}", monday, monday.AddDays(6));
+  var yesterday = link + string.Format("&start={0:yyyy-MM-dd}&end={0:yyyy-MM-dd}", DateTime.Now.AddDays(-1));
+  var thismonth = link + string.Format("&start={0:yyyy-MM-dd}&end={1:yyyy-MM-dd}", month, month.AddMonths(1).AddDays(-1));
+  var lastmonth = link + string.Format("&start={0:yyyy-MM-dd}&end={1:yyyy-MM-dd}", month.AddMonths(-1), month.AddDays(-1));
+}
+@section Javascript{
+  <script>
+    $('#product').keyup(function () {
+      if (event.keyCode === 27) {
+        this.value = '';
+      }
+    });
+    $('#start').change(function () {
+      $('#end').val(this.value);
+    });
+  </script>
+}
+
+<div class="level">
+  <div class="level-left">
+    <div class="level-item">
+      <div>
+        <div class="title is-5 is-spaced is-uppercase">
+          @ViewBag.SeoTitle
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="level-right">
+    <div class="level-item">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-static is-small">Shop</label>
+        </div>
+        <div class="control">
+          <div class="select is-small is-fullwidth">
+            @Html.DropDownList("ddlShopId", (List<SelectListItem>)ViewBag.DdlShop,
+              new { @class = "has-text-weight-bold", @onchange = "changeShop()" })
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs is-boxed">
+  <ul>
+    <li>
+      <a href="@Url.Action("News", "Sheet", new { shop = shop })">
+        @TextData.Get("Đơn chưa xử lý")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Process", "Sheet", new { shop = shop })">
+        @TextData.Get("Đơn đang xử lý")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Index", "Sheet", new { tab = 2, shop = shop })">
+        @TextData.Get("Đơn đã tạo")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Index", "Sheet", new { tab = 3, shop = shop })">
+        @TextData.Get("Đơn tạo lỗi")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Index", "Sheet", new { tab = 4, shop = shop })">
+        @TextData.Get("Đơn hủy")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Product", "Sheet", new { shop = shop })">
+        @TextData.Get("Sản phẩm")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Ads", "Ads", new { shop = shop })">
+        @TextData.Get("Chi phí Ads")
+      </a>
+    </li>
+    <li class="is-active">
+      <a href="@Url.Action("Report", "Sheet", new { shop = shop })">
+        @TextData.Get("Thống kê")
+      </a>
+    </li>
+  </ul>
+</div>
+
+@using (Html.BeginForm())
+{
+  <ul class="columns is-multiline is-variable is-1" style="margin-bottom: 1rem;">
+    <li class="column is-2">
+      @Html.TextBox("product", product,
+        new { @class = "input is-small", placeholder = TextData.Get("Sản phẩm"), list = "products", @autocomplete = "off" })
+      <datalist id="products">
+        <option value="@TextData.Get("Sản phẩm không xác định")" />
+        @foreach (var item in products)
+        {
+          <option value="@item" />
+        }
+      </datalist>
+    </li>
+    <li class="column is-narrow">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-small is-static">@TextData.Get("Từ ngày")</label>
+        </div>
+        <div class="control is-expanded" style="width: 130px;">
+          @Html.TextBox("start", (string)ViewBag.DateStart, new { @class = "input is-small", type = "date" })
+        </div>
+      </div>
+    </li>
+    <li class="column is-narrow">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-small is-static">@TextData.Get("Đến ngày")</label>
+        </div>
+        <div class="control is-expanded" style="width: 130px;">
+          @Html.TextBox("end", (string)ViewBag.DateEnd, new { @class = "input is-small", type = "date" })
+        </div>
+      </div>
+    </li>
+    <li class="column is-narrow">
+      <a class="button is-small" href="@link">
+        @TextData.Get("Hôm nay")
+      </a>
+      <a class="button is-small" href="@yesterday">
+        @TextData.Get("Hôm qua")
+      </a>
+      <a class="button is-small" href="@week">
+        @TextData.Get("Tuần này")
+      </a>
+      <a class="button is-small" href="@thismonth">
+        @TextData.Get("Tháng này")
+      </a>
+      <a class="button is-small" href="@lastmonth">
+        @TextData.Get("Tháng trước")
+      </a>
+    </li>
+    <li class="column has-text-right">
+      <button id="filterSubmit" type="submit" class="button is-info is-small">
+        <span class="icon">
+          <i class="feather icon-search"></i>
+        </span>
+        <span>@TextData.Get("Tìm kiếm")</span>
+      </button>
+      @Html.Hidden("shopId", shop)
+    </li>
+  </ul>
+}
+
+<table class="table is-vcentered is-hoverable is-fullwidth font-14">
+  <thead class="is-size-7">
+    <tr>
+      <th>@TextData.Get("Nhân viên")</th>
+      <th width="12%" title="Data hệ thông ghi nhận">@TextData.Get("Tổng data")</th>
+      <th width="12%" title="Đã chia đơn cho nhân viên">@TextData.Get("Đã xử lý")</th>
+      <th width="12%">@TextData.Get("Đơn chốt")</th>
+      <th width="12%">@TextData.Get("Tỉ lệ chốt")</th>
+      <th width="12%">@TextData.Get("Trung bình đơn chốt") (@currency)</th>
+      <th width="12%">@TextData.Get("Doanh thu") (@currency)</th>
+    </tr>
+  </thead>
+  <tbody>
+    @if (Model.Count > 0)
+    {
+      var sheets = Model;
+      var process = sheets.Where(x => !string.IsNullOrEmpty(x.UserId)).ToList();
+      var total = process.Where(x => x.ProcessId != 4 && x.ProcessId != 15).ToList();
+      var done = process.Where(x => x.ProcessId == 2).ToList();
+      var percent = total.Count > 0 ? done.Count * 100 / total.Count : 0;
+      var revenue = (from x in done select x.Revenue).Sum();
+      var average = done.Count > 0 ? revenue / done.Count : 0;
+      var adsTotal = (from x in adsList select x.Cost * x.Rate).Sum();
+      var adsPercent = revenue > 0 ? adsTotal * 100 / revenue : 0;
+
+      <tr class="has-text-weight-semibold">
+        <td>
+          @TextData.Get("Tất cả nhân viên")
+        </td>
+        <td>
+          @sheets.Count
+        </td>
+        <td>
+          @process.Count
+        </td>
+        <td>
+          @done.Count
+        </td>
+        <td>
+          @percent%
+        </td>
+        <td>
+          @string.Format("{0:0,0}", revenue / done.Count)
+        </td>
+        <td>
+          @string.Format("{0:0,0}", revenue)
+        </td>
+      </tr>
+    }
+    @if (users.Count > 0 && Model.Count > 0)
+    {
+      foreach (var user in users)
+      {
+        var sheets = Model.Where(x => x.UserId == user.UserId).ToList();
+        if (sheets.Count == 0) { continue; }
+        var total = sheets.Where(x => x.ProcessId != 4 && x.ProcessId != 15).ToList();
+        var done = sheets.Where(x => x.ProcessId == 2).ToList();
+        var percent = total.Count > 0 ? done.Count * 100 / total.Count : 0;
+        var revenue = (from x in done select x.Revenue).Sum();
+        var average = done.Count > 0 ? revenue / done.Count : 0;
+
+        <tr>
+          <td>
+            @user.Name
+          </td>
+          <td>
+            @sheets.Count
+          </td>
+          <td>
+            @sheets.Count
+          </td>
+          <td>
+            @done.Count
+          </td>
+          <td>
+            @percent%
+          </td>
+          <td>
+            @string.Format("{0:0,0}", average)
+          </td>
+          <td>
+            @string.Format("{0:0,0}", revenue)
+          </td>
+        </tr>
+      }
+    }
+  </tbody>
+</table>
+
+
+@if (string.IsNullOrEmpty(ViewBag.Product) && products.Count > 0 && Model.Count > 0)
+{
+  <table class="table is-vcentered is-hoverable is-fullwidth font-14">
+    <thead class="is-size-7">
+      <tr>
+        <th>@TextData.Get("Sản phẩm")</th>
+        <th width="7%">@TextData.Get("Tổng data")</th>
+        <th width="7%">@TextData.Get("Đã xử lý")</th>
+        <th width="7%">@TextData.Get("Đơn chốt")</th>
+        <th width="7%">@TextData.Get("Tỉ lệ chốt")</th>
+        <th width="9%">@TextData.Get("Trung bình đơn chốt") (@currency)</th>
+        <th width="9%">@TextData.Get("Doanh thu") (@currency)</th>
+        <th width="9%">@TextData.Get("Chi phí Ads") (@currency)</th>
+        <th width="9%">@TextData.Get("ADS/Data") (@currency)</th>
+        <th width="9%">@TextData.Get("ADS/Chốt") (@currency)</th>
+        <th width="9%">@TextData.Get("ADS/Doanh thu") (%)</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (Model.Count > 0)
+      {
+        var sheets = Model;
+        var process = sheets.Where(x => !string.IsNullOrEmpty(x.UserId)).ToList();
+        var total = process.Where(x => x.ProcessId != 4 && x.ProcessId != 15).ToList();
+        var done = process.Where(x => x.ProcessId == 2).ToList();
+        var percent = total.Count > 0 ? done.Count * 100 / total.Count : 0;
+        var revenue = (from x in done select x.Revenue).Sum();
+        var average = done.Count > 0 ? revenue / done.Count : 0;
+        var adsTotal = (from x in adsList select x.Cost * x.Rate).Sum();
+        var adsPercent = revenue > 0 ? adsTotal * 100 / revenue : 0;
+
+        <tr class="has-text-weight-semibold">
+          <td>
+            @TextData.Get("Tất cả sản phẩm")
+          </td>
+          <td>
+            @sheets.Count
+          </td>
+          <td>
+            @process.Count
+          </td>
+          <td>
+            @done.Count
+          </td>
+          <td>
+            @percent%
+          </td>
+          <td>
+            @string.Format("{0:0,0}", revenue / done.Count)
+          </td>
+          <td>
+            @string.Format("{0:0,0}", revenue)
+          </td>
+          <td>
+            @string.Format("{0:0,0}", adsTotal)
+          </td>
+          <td>
+            @string.Format("{0:0,0}", adsTotal / sheets.Count)
+          </td>
+          <td>
+            @string.Format("{0:0,0}", done.Count > 0 ? adsTotal / done.Count : 0)
+          </td>
+          <td>
+            @string.Format("{0:0}%", adsPercent)
+          </td>
+        </tr>
+      }
+      @foreach (var item in products)
+      {
+        var sheets = Model.Where(x => x.ProcessProduct.ToLower() == item.ToLower()).ToList();
+        if (sheets.Count == 0) { continue; }
+        var process = sheets.Where(x => !string.IsNullOrEmpty(x.UserId)).ToList();
+        var total = process.Where(x => x.ProcessId != 4 && x.ProcessId != 15).ToList();
+        var done = process.Where(x => x.ProcessId == 2).ToList();
+        var percent = total.Count > 0 ? done.Count * 100 / total.Count : 0;
+        var revenue = (from x in done select x.Revenue).Sum();
+        var average = done.Count > 0 ? revenue / done.Count : 0;
+        var adsProduct = adsList.Where(x => x.Product.ToLower() == item.ToLower()).ToList();
+        var adsTotal = (from x in adsProduct select x.Cost * x.Rate).Sum();
+        var adsPercent = revenue > 0 ? adsTotal * 100 / revenue : 0;
+
+        <tr>
+          <td>
+            @item
+          </td>
+          <td>
+            @sheets.Count
+          </td>
+          <td>
+            @process.Count
+          </td>
+          <td>
+            @done.Count
+          </td>
+          <td>
+            @percent%
+          </td>
+          <td>
+            @string.Format("{0:0,0}", average)
+          </td>
+          <td>
+            @string.Format("{0:0,0}", revenue)
+          </td>
+          <td>
+            @string.Format("{0:0,0}", adsTotal)
+          </td>
+          <td>
+            @string.Format("{0:0,0}", adsTotal / sheets.Count)
+          </td>
+          <td>
+            @string.Format("{0:0,0}", done.Count > 0 ? adsTotal / done.Count : 0)
+          </td>
+          <td>
+            @string.Format("{0:0}%", adsPercent)
+          </td>
+        </tr>
+      }
+
+      @{
+        var sheetsOtherProduct = Model.Where(x => string.IsNullOrEmpty(x.ProcessProduct)).ToList();
+        if (sheetsOtherProduct.Count > 0)
+        {
+          var process = sheetsOtherProduct.Where(x => !string.IsNullOrEmpty(x.UserId)).ToList();
+          var total = process.Where(x => x.ProcessId != 4 && x.ProcessId != 15).ToList();
+          var done = process.Where(x => x.ProcessId == 2).ToList();
+          var percent = total.Count > 0 ? done.Count * 100 / total.Count : 0;
+          var revenue = (from x in done select x.Revenue).Sum();
+          var average = done.Count > 0 ? revenue / done.Count : 0;
+          var adsProduct = adsList.Where(x => x.Product.ToLower() == "sản phẩm không xác định").ToList();
+          var adsTotal = (from x in adsProduct select x.Cost * x.Rate).Sum();
+          var adsPercent = revenue > 0 ? adsTotal * 100 / revenue : 0;
+          <tr>
+            <td>
+              @TextData.Get("Sản phẩm không xác định")
+            </td>
+            <td>
+              @sheetsOtherProduct.Count
+            </td>
+            <td>
+              @process.Count
+            </td>
+            <td>
+              @done.Count
+            </td>
+            <td>
+              @percent%
+            </td>
+            <td>
+              @string.Format("{0:0,0}", average)
+            </td>
+            <td>
+              @string.Format("{0:0,0}", revenue)
+            </td>
+            <td>
+              @string.Format("{0:0,0}", adsTotal)
+            </td>
+            <td>
+              @string.Format("{0:0,0}", adsTotal / sheetsOtherProduct.Count)
+            </td>
+            <td>
+              @string.Format("{0:0,0}", done.Count > 0 ? adsTotal / done.Count : 0)
+            </td>
+            <td>
+              @string.Format("{0:0}%", adsPercent)
+            </td>
+          </tr>
+        }
+      }
+    </tbody>
+  </table>
+}

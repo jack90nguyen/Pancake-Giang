@@ -1,0 +1,74 @@
+﻿@using System.Data;
+@{
+   ViewBag.SeoTitle = "SQL Server";
+   Layout = "~/Views/Shared/_Layout.cshtml";
+   var data = (DataTable)ViewBag.Data;
+}
+<style>
+   main {
+      max-width: 100%;
+   }
+
+   table thead th {
+      text-transform: none !important;
+   }
+</style>
+<div class="card">
+   <div class="card-header">
+      <span class="card-header-title">
+         @ViewBag.SeoTitle
+      </span>
+   </div>
+   <div class="card-content">
+      @using (Html.BeginForm())
+      {
+         @Html.Raw(ViewBag.Notification)
+
+         <div class="field">
+            <div class="control">
+               @Html.TextArea("sqlQuery", "", new { @class = "textarea is-family-code", @rows = 20 })
+            </div>
+         </div>
+
+         <div class="field is-grouped">
+            <div class="control">
+               <button type="submit" name="update" class="button is-link">UPDATE</button>
+            </div>
+            <div class="control">
+               <button type="submit" name="get" class="button is-success">GET DATA</button>
+            </div>
+            <div class="control">
+               <a class="button" href="@Url.Action("SqlServer", "Config")">RESET</a>
+            </div>
+         </div>
+
+      }
+   </div>
+</div>
+
+@if (data != null)
+{
+   <div class="table-container">
+      <table class="table is-hoverable is-bordered is-fullwidth is-size-7 is-family-code">
+         <thead>
+            <tr>
+               @foreach (DataColumn col in data.Columns)
+               {
+                  <th>@col.ColumnName</th>
+               }
+            </tr>
+         </thead>
+         <tbody>
+            @foreach (DataRow row in data.Rows)
+            {
+               <tr>
+                  @for (int i = 0; i < data.Columns.Count; i++)
+                  {
+                     <td>@row[i]</td>
+                  }
+               </tr>
+            }
+         </tbody>
+      </table>
+   </div>
+}

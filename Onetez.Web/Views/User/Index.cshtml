@@ -1,0 +1,114 @@
+﻿@using Onetez.Core.DbContext;
+@using Onetez.Dal.EntityClasses;
+@using Onetez.Core.Libs;
+@using Onetez.Web.Modules
+@model List<UsersEntity>
+@{
+  ViewBag.SeoTitle = "Danh sách tài khoản";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@section Javascript{
+  @Scripts.Render("~/bundles-user-list/js")
+}
+
+<div class="level is-mobile">
+  <div class="level-left">
+    <div class="level-item">
+      <div>
+        <div class="title is-spaced">
+          @ViewBag.SeoTitle
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="level-left">
+    <div class="level-item">
+      <a class="button is-small" href="@Url.Action("Create", "User")">
+        <span class="icon">
+          <i class="feather icon-plus"></i>
+        </span>
+        <span>@TextData.Get("Thêm mới")</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<table class="table is-hoverable is-fullwidth font-14 is-vertical-middle">
+  <thead>
+    <tr>
+      <th width="20%">Username</th>
+      <th width="20%">@TextData.Get("Họ và tên")</th>
+      <th>Email</th>
+      <th width="10%">Online</th>
+      <th width="20%">@TextData.Get("Quyền hạn")</th>
+      <th width="60px"></th>
+    </tr>
+  </thead>
+  <tbody>
+    @foreach (var item in Model)
+    {
+      string linkEdit = Url.Action("Info", "User", new { @id = item.UserId });
+      var role = DbUser.Role(item.RoleId);
+
+      <tr id="row_@item.UserId">
+        <td>
+          <div class="avatar-round">
+            <i class="is-avatar" style="background-image: url('@item.Avatar');"></i>
+            <a class="is-text" href="@linkEdit">@item.Username</a>
+          </div>
+        </td>
+        <td>
+          <span>@item.Name</span>
+        </td>
+        <td>
+          <span>@item.Email</span>
+        </td>
+        <td>
+          @ConvertString.ConvertDate(null, item.Online)
+        </td>
+        <td>
+          <div class="tags">
+            @if (role != null)
+            {
+              <span class="tag is-small @role.color">@role.name</span>
+            }
+            @if (item.IsAds)
+            {
+              <span class="tag is-small is-info">@TextData.Get("Chi phí Ads")</span>
+            }
+            @if (item.IsReport)
+            {
+              <span class="tag is-small is-warning">@TextData.Get("Xem thống kê")</span>
+            }
+          </div>
+        </td>
+        <td class="has-text-centered">
+          <div class="dropdown is-hoverable is-right is-menu">
+            <div class="dropdown-trigger">
+              <span class="icon">
+                <i class="s18 feather icon-more-vertical"></i>
+              </span>
+            </div>
+            <div class="dropdown-menu">
+              <div class="dropdown-content">
+                <a class="dropdown-item has-icon" href="@linkEdit">
+                  <span class="icon"><i class="feather icon-edit"></i></span>
+                  <span>@TextData.Get("Chỉnh sửa")</span>
+                </a>
+                <a class="dropdown-item has-icon" onclick="resetPassword('@item.UserId')">
+                  <span class="icon"><i class="feather icon-lock"></i></span>
+                  <span>@TextData.Get("Cấp lại password")</span>
+                </a>
+                <hr class="dropdown-divider">
+                <a class="dropdown-item has-icon has-text-danger" onclick="deleteItem('@item.UserId')">
+                  <span class="icon"><i class="feather icon-trash-2"></i></span>
+                  <span>@TextData.Get("Xóa")</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>

@@ -1,0 +1,298 @@
+﻿@using System.Configuration;
+@using Onetez.Core.DbContext;
+@using Onetez.Web.Modules;
+@using Onetez.Dal.EntityClasses;
+@model ShopsEntity
+@{
+  ViewBag.SeoTitle = "Cấu hình Shop";
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  var IsPancake = Convert.ToBoolean(ConfigurationManager.AppSettings["IsPancake"]);
+  var shopList = (List<ShopsEntity>)ViewBag.ShopList;
+  var linkWarehouse = "https://pos.pages.fm/api/v1/shops/" + Model.Id + "/warehouses?api_key=" + Model.ApiKey;
+  var linkOrders = "https://pos.pages.fm/api/v1/shops/" + Model.Id + "/orders?api_key=" + Model.ApiKey + "&page_number=1&page_size=500";
+  var linkSheet = "/APIv1/Sheet/GetSheet/" + Model.Id;
+  var sheetColumns = DbShop.GetSheetColumns(Model.SheetColumns);
+}
+@section Javascript{
+  <script>
+    function deleteShop(id) {
+      if (confirm('Bạn có chắc muốn xóa Shop này ?')) {
+        $.ajax({
+          type: "POST",
+          url: "/APIv1/Shop/Delete",
+          data: { id, status },
+          dataType: "json",
+          success: function (res) {
+            if (res.status === true) {
+              location.href = '/config/system';
+            }
+            else {
+              showNotify(res.msg, false);
+            }
+          }
+        });
+      }
+    }
+  </script>
+}
+
+<div class="columns is-centered">
+  <div class="column is-narrow" style="width: var(--form-medium);">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-header-title">
+          @ViewBag.SeoTitle
+        </span>
+      </div>
+      <div class="card-content">
+        <div class="columns">
+          <div class="column is-one-third">
+            <aside class="menu">
+              <div class="menu-label">
+                @TextData.Get("Hệ thống")
+              </div>
+              <ul class="menu-list">
+                <li>
+                  <a href="@Url.Action("Index","Config")">
+                    @TextData.Get("Cấu hình chung")
+                  </a>
+                </li>
+                <li>
+                  <a href="@Url.Action("Color","Config", new { @type = "keyword"})">
+                    @TextData.Get("Màu từ khóa")
+                  </a>
+                </li>
+                <li>
+                  <a href="@Url.Action("Color", "Config", new { @type = "ship"})">
+                    @TextData.Get("Ngày gửi hàng")
+                  </a>
+                </li>
+              </ul>
+              <div class="menu-label">
+                Shop
+              </div>
+              <ul class="menu-list">
+                @foreach (var item in shopList)
+                {
+                  <li>
+                    <a class="@(Model.Id == item.Id ? "is-active" : "")" href="@Url.Action("Shop","Config", new { @id = item.Id })">
+                      @item.Name
+                    </a>
+                  </li>
+                }
+                <li>
+                  <a href="@Url.Action("Shop","Config", new { @id = "0" })">
+                    @TextData.Get("Thêm mới")
+                  </a>
+                </li>
+              </ul>
+            </aside>
+          </div>
+
+          <div class="column is-two-thirds">
+            @using (Html.BeginForm())
+            {
+              @Html.Raw(ViewBag.Notification)
+
+              <div class="field">
+                <label class="label">Shop ID (*)</label>
+                <div class="control has-icons-right">
+                  @Html.TextBoxFor(model => model.Id, new { @class = "input font-14", @type = "number" })
+                  <span class="icon is-small is-right">
+                    <i class="lnr lnr-flag"></i>
+                  </span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="label">Shop Name (*)</label>
+                <div class="control">
+                  @Html.TextBoxFor(model => model.Name, new { @class = "input font-14", @maxlength = "200" })
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="label">
+                  @if (IsPancake)
+                  {
+                    <span>API Key (*)</span>
+                  }
+                  else
+                  {
+                    <a href="https://docs.google.com/spreadsheets/d/@Model.ApiKey" target="_blank" title="Sheet: Order-tool">
+                      Order Sheet ID (*)
+                    </a>
+                  }
+                </label>
+                <div class="control">
+                  @Html.TextBoxFor(model => model.ApiKey, new { @class = "input font-14", @maxlength = "50" })
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="label">
+                  <a href="https://docs.google.com/spreadsheets/d/@Model.SpreadsheetId" target="_blank">
+                    Data Sheet ID
+                  </a>
+                </label>
+                <div class="control">
+                  @Html.TextBoxFor(model => model.SpreadsheetId, new { @class = "input font-14", @maxlength = "50" })
+                </div>
+              </div>
+              <div class="field">
+                <label class="label">
+                  <a href="@linkSheet" target="_blank">
+                    Data Sheet Name
+                  </a>
+                </label>
+                <div class="control">
+                  @Html.TextBoxFor(model => model.SpreadsheetTab, new { @class = "input font-14", @maxlength = "50" })
+                </div>
+              </div>
+              <div class="@(IsPancake ? "field" : "is-hidden")">
+                <label class="label">
+                  <a href="@linkWarehouse" target="_blank">
+                    WarehouseId
+                  </a>
+                </label>
+                <div class="control">
+                  @Html.TextBoxFor(model => model.WarehouseId, new { @class = "input font-14", @maxlength = "50" })
+                </div>
+              </div>
+              <div class="@(IsPancake ? "field" : "is-hidden")">
+                <label class="label">Warehouse Info</label>
+                <div class="control">
+                  @Html.TextAreaFor(model => model.WarehouseInfo, new { @class = "textarea is-size-7 is-family-code", @maxlength = "1000", @rows = "8" })
+                </div>
+              </div>
+              <div class="@(IsPancake ? "field is-grouped is-grouped-multiline" : "is-hidden")">
+                <div class="control">
+                  <label class="label">
+                    <a href="@linkOrders" target="_blank">Số đơn mới</a>
+                  </label>
+                  <div class="control">
+                    <div class="select is-fullwidth font-14">
+                      @Html.DropDownListFor(model => model.OrderPage, (List<SelectListItem>)ViewBag.DdlOrderPage)
+                    </div>
+                  </div>
+                </div>
+                <div class="control">
+                  <label class="label">Lưu sản phẩm phụ</label>
+                  <div class="control">
+                    <div class="select is-fullwidth font-14">
+                      @Html.DropDownListFor(model => model.ProductOtherInNote, new List<SelectListItem>
+                        {
+                          new SelectListItem { Text = "Vào ghi chú", Value = "true" },
+                          new SelectListItem { Text = "Vào đơn hàng", Value = "false" }
+                        })
+                    </div>
+                  </div>
+                </div>
+                <div class="control">
+                  <label class="label">Chuyển đổi đơn theo</label>
+                  <div class="control">
+                    <div class="select is-fullwidth font-14">
+                      @Html.DropDownListFor(model => model.ProductFindByName, new List<SelectListItem>
+                        {
+                          new SelectListItem { Text = "Tên trong Sheet", Value = "false" },
+                          new SelectListItem { Text = "Mã sản phẩm", Value = "true" }
+                        })
+                    </div>
+                  </div>
+                </div>
+                <div class="control">
+                  <label class="label">Đơn không thể chuyển đổi</label>
+                  <div class="control">
+                    <div class="select is-fullwidth font-14">
+                      @Html.DropDownListFor(model => model.ProductErrorToNote, new List<SelectListItem>
+                        {
+                          new SelectListItem { Text = "Tạo đơn trống và lưu vào ghi chú", Value = "true" },
+                          new SelectListItem { Text = "Thông báo không thể chuyển đổi đơn", Value = "false" }
+                        })
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="@(IsPancake ? "field" : "is-hidden")">
+                <label class="label">Các sản phẩm tạo đơn trống</label>
+                <div class="control">
+                  @Html.TextBoxFor(model => model.ProductToOrderEmpty, new { @class = "input font-14", maxlength = "500", placeholder = "Ví dụ: sản phẩm 1; sản phẩm 2;" })
+                </div>
+              </div>
+              <div class="field">
+                <label class="label">Data Sheet Column</label>
+                <ul class="columns is-multiline is-variable is-1">
+                  <li class="column is-2">
+                    <span class="has-text-grey is-size-7">date</span>
+                    @Html.TextBox("sheetdate", sheetColumns.date, new { @class = "input is-small", @type = "number" })
+                  </li>
+                  <li class="column is-2">
+                    <span class="has-text-grey is-size-7">name</span>
+                    @Html.TextBox("sheetname", sheetColumns.name, new { @class = "input is-small", @type = "number" })
+                  </li>
+                  <li class="column is-2">
+                    <span class="has-text-grey is-size-7">phone</span>
+                    @Html.TextBox("sheetphone", sheetColumns.phone, new { @class = "input is-small", @type = "number" })
+                  </li>
+                  <li class="column is-2">
+                    <span class="has-text-grey is-size-7">address</span>
+                    @Html.TextBox("sheetaddress", sheetColumns.address, new { @class = "input is-small", @type = "number" })
+                  </li>
+                  <li class="column is-2">
+                    <span class="has-text-grey is-size-7">product</span>
+                    @Html.TextBox("sheetproduct", sheetColumns.product, new { @class = "input is-small", @type = "number" })
+                  </li>
+                  <li class="column is-2">
+                    <span class="has-text-grey is-size-7">upsale</span>
+                    @Html.TextBox("sheetother", sheetColumns.other, new { @class = "input is-small", @type = "number" })
+                  </li>
+                  <li class="column is-2">
+                    <span class="has-text-grey is-size-7">size</span>
+                    @Html.TextBox("sheetsize", sheetColumns.size, new { @class = "input is-small", @type = "number" })
+                  </li>
+                  <li class="column is-2">
+                    <span class="has-text-grey is-size-7">color</span>
+                    @Html.TextBox("sheetcolor", sheetColumns.color, new { @class = "input is-small", @type = "number" })
+                  </li>
+                  <li class="column is-2">
+                    <span class="has-text-grey is-size-7">link</span>
+                    @Html.TextBox("sheetlink", sheetColumns.link, new { @class = "input is-small", @type = "number" })
+                  </li>
+                  <li class="column is-2">
+                    <span class="has-text-grey is-size-7">note</span>
+                    @Html.TextBox("sheetnote", sheetColumns.note, new { @class = "input is-small", @type = "number" })
+                  </li>
+                  <li class="column is-2">
+                    <span class="has-text-grey is-size-7">save</span>
+                    @Html.TextBox("sheetsave", sheetColumns.save, new { @class = "input is-small", @type = "number" })
+                  </li>
+                </ul>
+              </div>
+              <hr />
+              <div class="field is-grouped">
+                @if (Model.Id != 0)
+                {
+                  <div class="control">
+                    <button type="submit" name="save" class="button is-link">@TextData.Get("Cập nhật")</button>
+                  </div>
+                  <div class="control is-expanded">
+                    <a class="button is-danger" onclick="deleteShop(@Model.Id)">@TextData.Get("Xóa")</a>
+                  </div>
+                  <div>
+                    <button type="submit" name="copy" class="button">@TextData.Get("Tạo bản sao")</button>
+                  </div>
+                }
+                else
+                {
+                  <div class="control">
+                    <button type="submit" name="save" class="button is-success">@TextData.Get("Tạo Shop")</button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

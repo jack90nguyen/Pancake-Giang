@@ -1,0 +1,184 @@
+﻿@using System.Configuration;
+@using Onetez.Core.DbContext;
+@using Onetez.Dal.EntityClasses;
+@using Onetez.Dal.Models;
+@using Onetez.Web.Modules;
+@model List<AdsEntity>
+@{
+  ViewBag.SeoTitle = "Sheet: " + TextData.Get("Chi phí Ads");
+  Layout = "~/Views/Shared/_Layout.cshtml";
+  var currency = ConfigurationManager.AppSettings["Currency"];
+  var UserInfo = (UserModel)ViewBag.UserInfo;
+  int shop = (int)ViewBag.ShopId;
+  var shopInfo = DbShop.Get(shop);
+}
+@section Javascript{
+  @Scripts.Render("~/bundles-ads-list/js")
+}
+
+<div class="level is-mobile">
+  <div class="level-left">
+    <div class="level-item">
+      <div>
+        <div class="title is-5 is-spaced is-uppercase">
+          @ViewBag.SeoTitle
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="level-right">
+    <div class="level-item">
+      <div class="field has-addons">
+        <div class="control">
+          <label class="button is-static is-small">Shop</label>
+        </div>
+        <div class="control">
+          <div class="select is-small is-fullwidth">
+            @Html.DropDownList("ddlShopId", (List<SelectListItem>)ViewBag.DdlShop,
+              new { @class = "has-text-weight-bold", @onchange = "changeShop()" })
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs is-boxed">
+  <ul>
+    <li>
+      <a href="@Url.Action("News", "Sheet", new { shop = shop })">
+        @TextData.Get("Đơn chưa xử lý")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Process", "Sheet", new { shop = shop })">
+        @TextData.Get("Đơn đang xử lý")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Index", "Sheet", new { tab = 2, shop = shop })">
+        @TextData.Get("Đơn đã tạo")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Index", "Sheet", new { tab = 3, shop = shop })">
+        @TextData.Get("Đơn tạo lỗi")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Index", "Sheet", new { tab = 4, shop = shop })">
+        @TextData.Get("Đơn hủy")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Product", "Sheet", new { shop = shop })">
+        @TextData.Get("Sản phẩm")
+      </a>
+    </li>
+    <li class="is-active">
+      <a href="@Url.Action("Ads", "Ads", new { shop = shop })">
+        @TextData.Get("Chi phí Ads")
+      </a>
+    </li>
+    <li>
+      <a href="@Url.Action("Report", "Sheet", new { shop = shop })">
+        @TextData.Get("Thống kê")
+      </a>
+    </li>
+  </ul>
+</div>
+
+<div id="form_edit" class="columns is-multiline is-variable is-2 mb-4">
+  <div class="column is-2">
+    <div class="field">
+      <label class="label font-14">@TextData.Get("Ngày")</label>
+      <div class="control">
+        <input id="ads_day" type="date" class="input is-small" data-required onchange="changeDay()" />
+      </div>
+    </div>
+  </div>
+  <div class="column is-one-fifth">
+    <div class="field">
+      <label class="label font-14">@TextData.Get("Sản phẩm")</label>
+      <div class="control">
+        <input id="ads_product" type="text" class="input is-small" list="products"
+               placeholder="Chọn sản phẩm" data-required />
+        <datalist id="products"></datalist>
+      </div>
+    </div>
+  </div>
+  <div class="column is-2">
+    <div class="field">
+      <label class="label font-14">@TextData.Get("Chi phí"): $</label>
+      <div class="control">
+        <input id="ads_cost" type="number" class="input is-small" step="0.1" , min="0" data-required />
+      </div>
+    </div>
+  </div>
+  <div class="column is-2">
+    <div class="field">
+      <label class="label font-14">@TextData.Get("Tỷ giá"): @currency/1$</label>
+      <div class="control">
+        <input id="ads_rate" type="number" class="input is-small" step="0.1" , min="0" data-required />
+      </div>
+    </div>
+  </div>
+  <div class="column">
+    <div class="field">
+      <label class="label font-14">&nbsp;</label>
+      <div class="control buttons is-right">
+        <a class="button is-link is-small" onclick="updateItem()">
+          <span class="icon">
+            <i class="feather icon-save"></i>
+          </span>
+          <span>@TextData.Get("Cập nhật")</span>
+        </a>
+        <a class="button is-small" href="@Url.Action("Ads", "Ads", new { shop = shop })">
+          <span>@TextData.Get("Hủy")</span>
+        </a>
+        @Html.Hidden("ads_shop", shop)
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<table id="data_list" class="table is-vcentered is-hoverable is-fullwidth font-14">
+  <thead class="is-size-7">
+    <tr>
+      <th width="10%">@TextData.Get("Ngày")</th>
+      <th>@TextData.Get("Sản phẩm")</th>
+      <th width="15%">@TextData.Get("Chi phí") ($)</th>
+      <th width="15%">@TextData.Get("Tỷ giá")</th>
+      <th width="15%">@TextData.Get("Chi phí") (@currency)</th>
+      <th width="40px" align="center"></th>
+    </tr>
+  </thead>
+  <tbody>
+    @foreach (var item in Model)
+    {
+      <tr id="row_@item.Id">
+        <td>
+          @string.Format("{0:dd-MM-yyyy}", item.Day)
+        </td>
+        <td>
+          <span>@item.Product</span>
+        </td>
+        <td>
+          @string.Format("{0:0,0.00} $", item.Cost)
+        </td>
+        <td>
+          @string.Format("{0:0,0}", item.Rate) @currency
+        </td>
+        <td>
+          @string.Format("{0:0,0}", item.Cost * item.Rate) @currency
+        </td>
+        <td align="center">
+          <a onclick="deleteItem('@item.Id')" class="delete"></a>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
+
+@Html.Raw(ViewBag.Pagination)

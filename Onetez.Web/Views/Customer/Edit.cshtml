@@ -1,0 +1,95 @@
+﻿@using Onetez.Dal.EntityClasses;
+@model CustomersEntity
+@{
+    ViewBag.SeoTitle = "Thông tin khách hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    bool isPopup = Request.QueryString["mode"] == "popup";
+}
+@section Javascript{
+    @if(isPopup)
+    {
+        <script>
+            $('#Name').focus();
+            function closeWindow() {
+                window.opener.popupCallback('@Model.Id', '@Model.Name');
+                window.close();
+            }
+        </script>
+        if (Request.QueryString["event"] == "close")
+        {
+            <script>
+                console.log('Close Window');
+                closeWindow();
+            </script>
+        }
+        <style>
+            header, .level {
+                display: none !important;
+            }
+        </style>
+    }
+}
+
+<div class="level">
+    <div class="level-left">
+        <div class="level-item">
+            <div>
+                <div class="title is-spaced">
+                    @ViewBag.SeoTitle
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="columns is-centered">
+    <div class="column is-narrow" style="width: var(--form-small)">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-header-title">
+                    Thông tin khách hàng
+                </span>
+            </div>
+            <div class="card-content">
+                @using (Html.BeginForm("Edit", "Customer", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                {
+                    @Html.Raw(ViewBag.Notification)
+
+                    <div class="field">
+                        <label class="label">Họ & tên</label>
+                        <div class="control has-icons-right">
+                            @Html.TextBoxFor(model => model.Name, new { @class = "input", @maxlength = "50", @placeholder = "Bắt buộc nhập" })
+                            <span class="icon is-small is-right">
+                                <i class="fas fa-asterisk"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">Điện thoại</label>
+                        <div class="control">
+                            @Html.TextBoxFor(model => model.Phone, new { @class = "input", @type = "number", @maxlength = "50" })
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label class="label">E-mail</label>
+                        <div class="control">
+                            @Html.TextBoxFor(model => model.Email, new { @class = "input", @type = "email", @maxlength = "50" })
+                        </div>
+                    </div>
+
+                    <div class="field is-grouped">
+                        <div class="control">
+                            <button type="submit" name="save" class="button is-link">Cập nhật</button>
+                            @Html.CheckBox("isPopup", isPopup, new { @class = "is-hidden" })
+                        </div>
+                        <div class="control">
+                            <a class="button is-link is-light" href="@Url.Action("Index","Customer")">Quay lại</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
