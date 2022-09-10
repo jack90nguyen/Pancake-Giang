@@ -336,6 +336,30 @@ function changeUserProcess() {
   });
 }
 
+function moveToUnprocessed() {
+  let sheets = [];
+  const listSheet = $('.js_cb_list');
+  for (let i = 0; i < listSheet.length; i++) {
+    const item = listSheet[i];
+    if (item.checked)
+      sheets.push(item.dataset.id);
+  }
+
+  $.ajax({
+    type: "POST",
+    url: "/APIv1/Sheet/Unprocessed",
+    data: { sheets },
+    dataType: "json",
+    success: function (res) {
+      showNotify(res.msg, res.status);
+      if (res.status) {
+        for (var i = 0; i < sheets.length; i++)
+          $(`#row_${sheets[i]}`).remove();
+      }
+    }
+  });
+}
+
 function changeProcess(id) {
   const process = parseInt($(`#process_${id}`).val());
   $.ajax({

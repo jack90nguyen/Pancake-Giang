@@ -136,7 +136,7 @@
     <li class="column is-narrow" style="width: 120px;">
       @Html.TextBox("phone", (string)ViewBag.Phone, new { @class = "input is-small", placeholder = TextData.Get("Điện thoại") })
     </li>
-    <li class="column is-narrow @(IsPancake ? "is-hidden" : "")" style="width: 220px;">
+    <li class="column is-narrow @(IsPancake ? "is-hidden" : "is-hidden")" style="width: 220px;">
       <div class="field has-addons">
         <div class="control">
           <label class="button is-small is-static">@TextData.Get("Danh mục")</label>

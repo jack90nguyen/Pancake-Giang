@@ -20,7 +20,7 @@ namespace Onetez.Web.Controllers
     public ActionResult News()
     {
       // USER: kiểm tra quyền
-      if (!UserInfo.role.is_admin)
+      if (!UserInfo.role.is_admin && !UserInfo.role.is_partner)
         return RedirectToAction("PageRole", "Home", new { url = Request.RawUrl });
 
       // Danh sách shop
@@ -80,7 +80,7 @@ namespace Onetez.Web.Controllers
     public ActionResult Process()
     {
       // USER: kiểm tra quyền
-      if (!UserInfo.role.is_role)
+      if (!UserInfo.role.is_admin && !UserInfo.role.is_staff)
         return RedirectToAction("PageRole", "Home", new { url = Request.RawUrl });
 
       // Danh sách shop
@@ -156,8 +156,8 @@ namespace Onetez.Web.Controllers
 
       // Tình trạng xử lý
       var slStatus = new List<SelectListItem>();
-      slStatus.Add(new SelectListItem { Text = "Đang xử lý", Value = "1", Selected = statusId == 1 });
-      slStatus.Add(new SelectListItem { Text = "Quá hạn", Value = "2", Selected = statusId == 2 });
+      slStatus.Add(new SelectListItem { Text = "Processing", Value = "1", Selected = statusId == 1 });
+      slStatus.Add(new SelectListItem { Text = "Out of date", Value = "2", Selected = statusId == 2 });
       if(UserInfo.role.is_admin)
         slStatus.Add(new SelectListItem { Text = TextData.Get("Tất cả"), Value = "0", Selected = statusId == 0 });
       ViewBag.DdlStatus = slStatus;
@@ -193,7 +193,7 @@ namespace Onetez.Web.Controllers
     public ActionResult Index()
     {
       // USER: kiểm tra quyền
-      if (!UserInfo.role.is_role)
+      if (!UserInfo.role.is_admin && !UserInfo.role.is_staff)
         return RedirectToAction("PageRole", "Home", new { url = Request.RawUrl });
 
       // Danh sách shop
@@ -272,7 +272,7 @@ namespace Onetez.Web.Controllers
     public ActionResult Product()
     {
       // USER: kiểm tra quyền
-      if (!UserInfo.role.is_role)
+      if (!UserInfo.role.is_admin && !UserInfo.role.is_staff)
         return RedirectToAction("PageRole", "Home", new { url = Request.RawUrl });
 
       // Danh sách shop

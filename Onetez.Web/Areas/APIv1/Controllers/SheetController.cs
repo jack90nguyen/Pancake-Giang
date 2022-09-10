@@ -294,9 +294,9 @@ namespace Onetez.Web.Areas.APIv1.Controllers
           if (!string.IsNullOrEmpty(result.id))
           {
             if(UserInfo != null)
-              sheet.ProcessLog = string.Format("{0:dd/MM, HH:mm}: Lên đơn", DateTime.Now) + $" ({UserInfo.name})<br>" + sheet.ProcessLog;
+              sheet.ProcessLog = string.Format("{0:dd/MM, HH:mm}: Create order", DateTime.Now) + $" ({UserInfo.name})<br>" + sheet.ProcessLog;
             else
-              sheet.ProcessLog = string.Format("{0:dd/MM, HH:mm}: Lên đơn", DateTime.Now) + sheet.ProcessLog;
+              sheet.ProcessLog = string.Format("{0:dd/MM, HH:mm}: Create order", DateTime.Now) + sheet.ProcessLog;
 
             sheet.Error = "";
             sheet.StatusId = 1;
@@ -454,7 +454,7 @@ namespace Onetez.Web.Areas.APIv1.Controllers
               {
                 result = new OrderCreateResult.DataOrder { id = DateTime.Now.ToString("MMddHHmmss") };
 
-                sheet.ProcessLog = string.Format("{0:dd/MM, HH:mm}: Lên đơn", DateTime.Now) + $" ({UserInfo.name})<br>" + sheet.ProcessLog;
+                sheet.ProcessLog = string.Format("{0:dd/MM, HH:mm}: Create order", DateTime.Now) + $" ({UserInfo.name})<br>" + sheet.ProcessLog;
 
                 sheet.Error = "";
                 sheet.StatusId = 1;
@@ -476,9 +476,9 @@ namespace Onetez.Web.Areas.APIv1.Controllers
                 if (result != null)
                 {
                   if (UserInfo != null)
-                    sheet.ProcessLog = string.Format("{0:dd/MM, HH:mm}: ", DateTime.Now) + (IsEnglish ? "Create Order" : "Lên đơn") + $" ({UserInfo.name})<br>" + sheet.ProcessLog;
+                    sheet.ProcessLog = string.Format("{0:dd/MM, HH:mm}: ", DateTime.Now) + (IsEnglish ? "Create Order" : "Create order") + $" ({UserInfo.name})<br>" + sheet.ProcessLog;
                   else
-                    sheet.ProcessLog = string.Format("{0:dd/MM, HH:mm}: Lên đơn", DateTime.Now) + sheet.ProcessLog;
+                    sheet.ProcessLog = string.Format("{0:dd/MM, HH:mm}: Create order", DateTime.Now) + sheet.ProcessLog;
 
                   sheet.Error = "";
                   sheet.StatusId = 1;
@@ -716,13 +716,44 @@ namespace Onetez.Web.Areas.APIv1.Controllers
         }
 
         status = true;
-        message = $"Đã chia {sheets.Length} cho {users.Length} nhân viên.";
+        message = $"Divided {sheets.Length} orders among {users.Length} employees.";
       }
       else
-        message = "Chọn đơn và nhân viên cần chia đơn";
+        message = "Select the order and the employee to divide the order";
 
       return Json(new { status = status, msg = message });
     }
+
+
+    [Authorize]
+    [HttpPost]
+    public JsonResult Unprocessed(string[] sheets)
+    {
+      var status = false;
+      var message = string.Empty;
+
+      if (sheets.Length > 0)
+      {
+        for (int i = 0; i < sheets.Length; i++)
+        {
+          var sheet = DbSheet.Get(sheets[i]);
+          if(sheets != null)
+          {
+            sheet.ProcessDate = DateTime.Now;
+            sheet.UserId = string.Empty;
+            sheet.Save();
+          }
+        }
+
+        status = true;
+        message = "Moved to unprocessed.";
+      }
+      else
+        message = "Select the order and the employee to divide the order";
+
+      return Json(new { status = status, msg = message });
+    }
+
 
     [Authorize]
     [HttpPost]

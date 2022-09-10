@@ -132,7 +132,7 @@ namespace Onetez.Core.DbContext
       list.Add(new StaticModel
       {
         id = 3,
-        name = "Đối tác vận chuyển",
+        name = "Người chia đơn",
         color = "is-primary",
       });
 

@@ -16,7 +16,7 @@ namespace Onetez.Web.Modules
       var list = new List<TextModel>();
 
       list.Add(new TextModel { vi = "Phần mềm hỗ trợ xử lý đơn hàng", en = "Order processing software" });
-      list.Add(new TextModel { vi = "Đơn chưa xử lý", en = "Order no process" });
+      list.Add(new TextModel { vi = "Đơn chưa xử lý", en = "Order unprocessed" });
       list.Add(new TextModel { vi = "Đơn đang xử lý", en = "Order processing" });
       list.Add(new TextModel { vi = "Đơn đã xử lý", en = "Order processed" });
       list.Add(new TextModel { vi = "Đơn đã tạo", en = "Order created" });
